@@ -29,6 +29,13 @@ int main(){
 	int n_choices, n_choice_desc;
 	int c;
 	
+	FILE * fp;
+	char line[1000];
+	size_t len = 0;
+	size_t read;
+	fp = fopen("data.tsv", "r");
+	line = calloc(1000);
+	
 	initscr();
 	cbreak();
 	noecho();
@@ -67,6 +74,19 @@ int main(){
 				if(item_name(current_item(menu)) == "Exit"){
 					exit_cond = true;
 				}
+				else if(item_name(current_item(menu)) == "Create"){
+					
+					if(fp == NULL){
+						exit_cond = true;
+					}
+					mvprintw(LINES - 4, 0, "WOW YOU DID IT :')'");
+					fscanf(fp, "%[^\n]", line);
+					mvprintw(LINES - 5, 0, "Line 1: %c", line);
+					/*while ((read = getline(&line, &len, fp)) != -1){
+						printf("Retrieved line of length %zu:\n", read);
+						printf("%s", line);
+					}*/
+				}
 				
 				break;
 		}
@@ -74,7 +94,7 @@ int main(){
 	}
 	
 	
-	
+	fclose(fp);
 	free_item(menu_items[0]);
 	free_item(menu_items[1]);
 	free_menu(menu);
