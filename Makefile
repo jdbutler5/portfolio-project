@@ -1,3 +1,5 @@
-make: test.c
-	chmod 644 test.c
-	gcc -Wall -std=c11 test.c -lmenu -lncurses
+make: test3.c
+	chmod 644 test3.c
+	chmod 644 datatest2.txt
+	chmod 644 movie_records
+	gcc -Wall -std=c11 test3.c -lmenu -lncurses
