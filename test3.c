@@ -7,7 +7,8 @@
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
 //struct for movie node
-struct movieNode{
+struct movieNode
+{
 	int key;
 	char * title;
 	char * genre;
@@ -37,24 +38,12 @@ char *choice_desc[] = {
 //Comparison typedef.
 typedef int (*Compare) (const char *, const char *);
 
-/* char * choppy(char *s){
-	/* int len = strlen(s);
-	if(s[len-1] == "\n"){
-		s[len-1] = 0;
-	} 
-	
-	if(s[strlen(s)-1] == "\n")
-		s[strlen(s)-1] = '\0';
-	 if(strcmp(s, "'\N'") == 0){
-		strcpy(s, "N/A");
-	} 
-	return s;
-} */
-
 //Function for inserting into the binary search tree.
-void insert(char* key, char * genres, char * runningTimeMinutes, char * startYear, struct movieNode** leaf, Compare cmp){
+void insert(char* key, char * genres, char * runningTimeMinutes, char * startYear, struct movieNode** leaf, Compare cmp)
+{
 	int res;
-	if (*leaf == NULL){
+	if (*leaf == NULL)
+	{
 		*leaf = (struct movieNode*)malloc(sizeof(struct movieNode));
 		(*leaf)->title = malloc(strlen (key) + 1);
 		strcpy((*leaf)->title, key);
@@ -69,7 +58,9 @@ void insert(char* key, char * genres, char * runningTimeMinutes, char * startYea
 		strcpy((*leaf)->yearReleased, startYear);
 		
 		(*leaf)->left = (*leaf)->right = NULL;
-	}else{
+	}
+	else
+	{
 		res = cmp(key, (*leaf)->title);
 		if(res < 0)
 			insert(key, genres, runningTimeMinutes, startYear, &(*leaf)->left, cmp);
@@ -81,13 +72,16 @@ void insert(char* key, char * genres, char * runningTimeMinutes, char * startYea
 }
 
 //compares value of new node against previous
-int cmpStr(const char *a, const char *b){
+int cmpStr(const char *a, const char *b)
+{
 	return (strcmp(a,b));
 }
 
 //Prints out the entire BST in order.
-void in_order(struct movieNode *root){
-	if(root != NULL){
+void in_order(struct movieNode *root)
+{
+	if(root != NULL)
+	{
 		in_order(root->left);
 		
 		//printf("   %s | %s | %s | %s \n", root->title, root->genre, root->runningTime, root->yearReleased);
@@ -98,9 +92,11 @@ void in_order(struct movieNode *root){
 }
 
 //Search for a specific node.
-void search(char* key, struct movieNode* leaf, Compare cmp){
+void search(char* key, struct movieNode* leaf, Compare cmp)
+{
 	int res;
-	if(leaf != NULL){
+	if(leaf != NULL)
+	{
 		res = cmp(key, leaf->title);
 		if(res < 0)
 			search(key, leaf->left, cmp);
@@ -114,21 +110,26 @@ void search(char* key, struct movieNode* leaf, Compare cmp){
 }
 
 //search for nodes with a search term of the value of key. returns a BST of all nodes containing the key in their title.
-void search2(char* key, struct movieNode* leaf, Compare cmp, struct movieNode ** searchRoot){
+void search2(char* key, struct movieNode* leaf, Compare cmp, struct movieNode ** searchRoot)
+{
 	int res;
 	char * p;
 	char * k;
 	
-	if(leaf != NULL){
+	if(leaf != NULL)
+	{
 		res = cmp(key, leaf->title);
 		//printf("%s", leaf->title);
-		if(res < 0){
+		if(res < 0)
+		{
 			//If the search key doesn't match exactly, see if any entries in the left leaf contain a part of the search string
 			p = strstr(leaf->title, key);
-			if(p != NULL){
+			if(p != NULL)
+			{
 				//If they do, add it to the searchRoot mini-BST
 				
-				if (*searchRoot == NULL){
+				if (*searchRoot == NULL)
+				{
 					*searchRoot = (struct movieNode*)malloc(sizeof(struct movieNode));
 					(*searchRoot)->title = malloc(strlen (leaf->title) + 1);
 					strcpy((*searchRoot)->title, leaf->title);
@@ -151,9 +152,11 @@ void search2(char* key, struct movieNode* leaf, Compare cmp, struct movieNode **
 			search2(key, leaf->left, cmp, &(*searchRoot));
 			search2(key, leaf->right, cmp, &(*searchRoot));
 		}
-		else if(res > 0){
+		else if(res > 0)
+		{
 			k = strstr(leaf->title, key);
-			if(k != NULL){
+			if(k != NULL)
+			{
 				if (*searchRoot == NULL){
 					*searchRoot = (struct movieNode*)malloc(sizeof(struct movieNode));
 					(*searchRoot)->title = malloc(strlen (leaf->title) + 1);
@@ -177,7 +180,10 @@ void search2(char* key, struct movieNode* leaf, Compare cmp, struct movieNode **
 			search2(key, leaf->right, cmp, &(*searchRoot));
 		}
 		else
-			printf("\n'%s' found!\n", key);
+		{
+			//printf("\n%s", key);
+			insert(leaf->title, leaf->genre, leaf->runningTime, leaf->yearReleased, &(*searchRoot), (Compare)cmpStr);
+		}
 	}
 	
 	return (*searchRoot);
@@ -185,8 +191,10 @@ void search2(char* key, struct movieNode* leaf, Compare cmp, struct movieNode **
 
 
 //Deletes a specified BST.
-void delete_tree(struct movieNode** leaf){
-	if(*leaf != NULL){
+void delete_tree(struct movieNode** leaf)
+{
+	if(*leaf != NULL)
+	{
 		delete_tree(&(*leaf)->left);
 		delete_tree(&(*leaf)->right);
 		free((*leaf)->title);
@@ -209,7 +217,8 @@ int main()
 	
     file = fopen("movie_records","r");
 	// file = fopen("datatest2.txt","r");
-    if(file != NULL){
+    if(file != NULL)
+	{
 
         //get file size
         fseek(file,0,SEEK_END);
@@ -232,7 +241,8 @@ int main()
 		//int i = 0;
 		struct movieNode *root = NULL;
 		
-		while(fgets(file_content,fsize,file)){
+		while(fgets(file_content,fsize,file))
+		{
 			//puts(file_content);
 			sscanf(file_content, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\n", tConst, titleType, primaryTitle, originalTitle, isAdult, startYear, endYear, runtimeMinutes, genres);
 			
@@ -248,62 +258,125 @@ int main()
 		}
 		
 		
-		//menu stuff
+		//NCURSES start
+		
 		initscr();
 		cbreak();
 		noecho();
-		keypad(stdscr, TRUE);
 		
-		n_choices = ARRAY_SIZE(choices);
-		n_choice_desc = ARRAY_SIZE(choice_desc);
-		menu_items = (ITEM **)calloc(n_choices + 1, sizeof(ITEM *));
+		int yBeg, xBeg, yMax, xMax;
+		getbegyx(stdscr, yBeg, xBeg);
+		getmaxyx(stdscr, yMax, xMax);
 		
-		for (int i = 0; i < n_choices; i++)
-			menu_items[i] = new_item(choices[i], choice_desc[i]);
-		
-		menu_items[n_choices] = (ITEM *)NULL;
-		
-		menu = new_menu((ITEM **)menu_items);
-		hline("ls", LINES - 4);
-		post_menu(menu);
-	    refresh();
-		
-		while((c = getch()) != KEY_F(1))
+		if(!has_colors())
 		{
-			switch(c)
+			printw("Terminal does not support color");
+			getch();
+			return -1;
+		}
+		
+		start_color();
+		init_pair(1, COLOR_YELLOW, COLOR_BLACK);
+		
+		attron(COLOR_PAIR(1));
+		mvprintw(yBeg + 2, (xMax/2)-17, "Internet Movie Database - Main Menu\n\n");
+		attroff(COLOR_PAIR(1));
+		
+		WINDOW * menuwin = newwin(10, 45, yMax - 20, 30);
+		//reuse this line for the search menu: WINDOW * inputWin = newwin(10, xMax - 20, yMax - 25, 10);
+		wborder(menuwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+		refresh();
+		wrefresh(menuwin);
+		
+		keypad(menuwin, true);
+		
+		char * choices[] = {"Add - Add a movie to your catalog", "Update - Update a record in your catalog", "Delete - Delete a movie from your catalog", "Exit"};
+		int choice;
+		int highlight = 0;
+		
+		while(1)
+		{
+			for(int i = 0; i < 4; i++)
 			{
-				case KEY_DOWN:
-					menu_driver(menu, REQ_DOWN_ITEM);
-						break;
+				if(i==highlight)
+					wattron(menuwin, A_REVERSE);
+				mvwprintw(menuwin, i+1, 1, (char *)choices[i]);
+				wattroff(menuwin, A_REVERSE);
+			}
+			choice = wgetch(menuwin);
+			
+			switch(choice)
+			{
 				case KEY_UP:
-					menu_driver(menu, REQ_UP_ITEM);
-						break;
-				case 10: /*Enter*/
-					
-					mvprintw(LINES - 3, 0, "Your choice was %s", item_name(current_item(menu)));
-					
-					if(item_name(current_item(menu)) == "Exit"){
-						exit(1);
-					}
-					else if(item_name(current_item(menu)) == "Add"){
-						
-						/* if(fp == NULL){
-							exit(1);
-						} */
-						mvprintw(LINES - 4, 0, "WOW YOU DID IT :')'");
-						// fscanf(fp, "%[^\n]", line);
-						// mvprintw(LINES - 5, 0, "Line 1: %c", line);
-					}
-					
+					highlight--;
+					if(highlight == -1)
+						highlight = 0;
+					break;
+				case KEY_DOWN:
+					highlight++;
+					if(highlight == 4)
+						highlight = 3;
+					break;
+				default:
 					break;
 			}
 			
+			if(choice == 10)
+				break;
 		}
 		
-		//struct movieNode* searchRoot = NULL;
-		//search2("Life of", root, (Compare)cmpStr, &searchRoot);
-		//in_order(searchRoot);
-		unpost_menu(menu);
+		if(choices[highlight] == "Exit")
+		{
+			endwin();
+			exit(1);
+		}
+		else if(choices[highlight] == "Add - Add a movie to your catalog")
+		{
+			unpost_menu(menuwin);
+			
+			free_menu(menuwin);
+			wborder(menuwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
+			wrefresh(menuwin);
+			delwin(menuwin);
+			
+			WINDOW * searchwin = newwin(10, xMax - 20, yMax - 25, 10);
+			wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+			refresh();
+			wrefresh(searchwin);
+			
+			keypad(searchwin, true);
+		
+			char * searchChoices[] = {"Type a movie name to search...\t"};
+			char * searchChoice = malloc(100);			
+			
+			while(1)
+			{
+				for(int i = 0; i < 1; i++)
+				{
+					/*if(i==highlight)
+						wattron(menuwin, A_REVERSE);*/
+					mvwprintw(searchwin, i+1, 1, (char *)searchChoices[i]);
+					//wattroff(menuwin, A_REVERSE);
+				}
+				echo();
+				wgetstr(searchwin, searchChoice);
+				noecho();
+				
+				/* struct movieNode* searchRoot = NULL;
+				search2(searchChoice, root, (Compare)cmpStr, &searchRoot);
+				in_order(searchRoot); */
+			}
+			
+			
+		}	
+		
+		getch();
+		endwin();
+		
+		/* struct movieNode* searchRoot = NULL;
+		search2("Life of", root, (Compare)cmpStr, &searchRoot);
+		in_order(searchRoot); */
+		
 		
 		//freeing up memory
 		free(tConst);
