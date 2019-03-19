@@ -91,6 +91,44 @@ void in_order(struct movieNode *root)
 	}
 }
 
+int size(struct movieNode* node)
+{
+	int c = 1;
+	if(node == NULL)
+		return 0;
+	else
+	{
+		c += size(node->left);
+		c += size(node->right);
+		return c;
+	}
+}
+
+void in_order_to_array(struct movieNode *root, struct movieNode *array[], int index)
+{
+	if(root == NULL)
+	{	
+		return;
+	}
+	//printf("%d\n", index);
+	
+	in_order_to_array(root->left, array, index);
+	
+	array[index]->title = malloc(strlen(root->title) + 1);
+	array[index]->title = root->title;
+	array[index]->genre = malloc(strlen(root->genre) + 1);
+	array[index]->genre = root->genre;
+	array[index]->runningTime = malloc(strlen(root->runningTime) + 1);
+	array[index]->runningTime = root->runningTime;
+	array[index]->yearReleased = malloc(strlen(root->yearReleased) + 1);
+	array[index]->yearReleased = root->yearReleased;
+	index++;
+	//printf("%d\n", index);
+	
+	in_order_to_array(root->right, array, index);
+	
+}
+
 //Search for a specific node.
 void search(char* key, struct movieNode* leaf, Compare cmp)
 {
@@ -188,7 +226,6 @@ void search2(char* key, struct movieNode* leaf, Compare cmp, struct movieNode **
 	
 	return (*searchRoot);
 }
-
 
 //Deletes a specified BST.
 void delete_tree(struct movieNode** leaf)
@@ -339,7 +376,7 @@ int main()
 			wrefresh(menuwin);
 			delwin(menuwin);
 			
-			WINDOW * searchwin = newwin(10, xMax - 20, yMax - 25, 10);
+			WINDOW * searchwin = newwin(30, xMax - 20, yMax - 25, 10);
 			wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
 			refresh();
 			wrefresh(searchwin);
@@ -349,25 +386,43 @@ int main()
 			char * searchChoices[] = {"Type a movie name to search...\t"};
 			char * searchChoice = malloc(100);			
 			
-			while(1)
+			bool exitCond = false;
+			
+			while(!exitCond)
 			{
-				for(int i = 0; i < 1; i++)
-				{
-					/*if(i==highlight)
-						wattron(menuwin, A_REVERSE);*/
-					mvwprintw(searchwin, i+1, 1, (char *)searchChoices[i]);
-					//wattroff(menuwin, A_REVERSE);
-				}
+				// for(int i = 0; i < 1; i++)
+				// {
+					mvwprintw(searchwin, 1, 1, (char *)searchChoices[0]);
+				// }
 				echo();
 				wgetstr(searchwin, searchChoice);
-				noecho();
-				
-				/* struct movieNode* searchRoot = NULL;
-				search2(searchChoice, root, (Compare)cmpStr, &searchRoot);
-				in_order(searchRoot); */
+				exitCond = true;
+			}
+			
+			//mvwprintw(searchwin, 4, 4, searchChoice);
+			struct movieNode** searchRoot = NULL;
+			search2(searchChoice, root, (Compare)cmpStr, &searchRoot);
+			//in_order(searchRoot);
+			//mvwprintw(searchwin, 3, 1, "%d", size(searchRoot));
+			//mvwprintw(searchwin, 5, 30, "%d", size(searchRoot));
+			
+			
+			struct movieNode * array[size(searchRoot)];
+			for(int i = 0; i < size(searchRoot); i++)
+			{
+				array[i] = (struct movieNode*)malloc(sizeof(struct movieNode));
+			}
+			
+			int index = 0;
+			in_order_to_array(searchRoot, array, index);
+			
+			for(int i = 0; i < size(searchRoot); i++)
+			{
+				mvwprintw(searchwin, (i+1)+1, 1, "%s", array[i]->title);
 			}
 			
 			
+			wrefresh(searchwin);
 		}	
 		
 		getch();
