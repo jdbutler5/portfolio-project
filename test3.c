@@ -2,9 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ncurses.h>
-#include <menu.h>
+//#include <menu.h>
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+
+int index = 0;
 
 //struct for movie node
 struct movieNode
@@ -104,7 +106,7 @@ int size(struct movieNode* node)
 	}
 }
 
-void in_order_to_array(struct movieNode *root, struct movieNode *array[], int index)
+void in_order_to_array(struct movieNode *root, struct movieNode *array[])
 {
 	if(root == NULL)
 	{	
@@ -112,7 +114,7 @@ void in_order_to_array(struct movieNode *root, struct movieNode *array[], int in
 	}
 	//printf("%d\n", index);
 	
-	in_order_to_array(root->left, array, index);
+	in_order_to_array(root->left, array);
 	
 	array[index]->title = malloc(strlen(root->title) + 1);
 	array[index]->title = root->title;
@@ -121,12 +123,16 @@ void in_order_to_array(struct movieNode *root, struct movieNode *array[], int in
 	array[index]->runningTime = malloc(strlen(root->runningTime) + 1);
 	array[index]->runningTime = root->runningTime;
 	array[index]->yearReleased = malloc(strlen(root->yearReleased) + 1);
-	array[index]->yearReleased = root->yearReleased;
+	array[index]->yearReleased = root->yearReleased; 
 	index++;
 	//printf("%d\n", index);
 	
-	in_order_to_array(root->right, array, index);
-	
+	in_order_to_array(root->right, array);
+}
+
+void zeroIndex()
+{
+	index = 0;
 }
 
 //Search for a specific node.
@@ -247,10 +253,10 @@ int main()
     FILE * file;
     long fsize;
 	
-	ITEM **menu_items;
+	/* ITEM **menu_items;
 	MENU **menu;
 	int n_choices, n_choice_desc;
-	int c;
+	int c; */
 	
     file = fopen("movie_records","r");
 	// file = fopen("datatest2.txt","r");
@@ -319,6 +325,8 @@ int main()
 		mvprintw(yBeg + 2, (xMax/2)-17, "Internet Movie Database - Main Menu\n\n");
 		attroff(COLOR_PAIR(1));
 		
+		
+		
 		WINDOW * menuwin = newwin(10, 45, yMax - 20, 30);
 		//reuse this line for the search menu: WINDOW * inputWin = newwin(10, xMax - 20, yMax - 25, 10);
 		wborder(menuwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
@@ -369,58 +377,112 @@ int main()
 		}
 		else if(choices[highlight] == "Add - Add a movie to your catalog")
 		{
-			unpost_menu(menuwin);
+			/* unpost_menu(menuwin);
 			
-			free_menu(menuwin);
+			free_menu(menuwin); */
 			wborder(menuwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
 			wrefresh(menuwin);
 			delwin(menuwin);
 			
-			WINDOW * searchwin = newwin(30, xMax - 20, yMax - 25, 10);
-			wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
 			refresh();
+			
+			WINDOW * searchwin = newwin(30, xMax-20, yMax - 25, 10);
+			wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+			
 			wrefresh(searchwin);
 			
 			keypad(searchwin, true);
 		
-			char * searchChoices[] = {"Type a movie name to search...\t"};
-			char * searchChoice = malloc(100);			
+			char * searchMenu[] = {"Type a movie name to search...\t"};
+			char * searchChoice = malloc(300);			
 			
 			bool exitCond = false;
 			
 			while(!exitCond)
 			{
-				// for(int i = 0; i < 1; i++)
-				// {
-					mvwprintw(searchwin, 1, 1, (char *)searchChoices[0]);
-				// }
+				mvwprintw(searchwin, 1, 1, (char *)searchMenu[0]);
 				echo();
 				wgetstr(searchwin, searchChoice);
 				exitCond = true;
 			}
 			
-			//mvwprintw(searchwin, 4, 4, searchChoice);
+			noecho();
 			struct movieNode** searchRoot = NULL;
 			search2(searchChoice, root, (Compare)cmpStr, &searchRoot);
-			//in_order(searchRoot);
-			//mvwprintw(searchwin, 3, 1, "%d", size(searchRoot));
-			//mvwprintw(searchwin, 5, 30, "%d", size(searchRoot));
 			
+			int searchBSTsize = size(searchRoot);
 			
-			struct movieNode * array[size(searchRoot)];
+			struct movieNode * array[(searchBSTsize)];
+			
 			for(int i = 0; i < size(searchRoot); i++)
 			{
 				array[i] = (struct movieNode*)malloc(sizeof(struct movieNode));
 			}
 			
-			int index = 0;
-			in_order_to_array(searchRoot, array, index);
+			in_order_to_array(searchRoot, array);
+			char * searchChoices[searchBSTsize]; 
 			
-			for(int i = 0; i < size(searchRoot); i++)
+			bool exitCond2 = false;
+			
+			
+			for(int i = 0; i < searchBSTsize; i++)
 			{
-				mvwprintw(searchwin, (i+1)+1, 1, "%s", array[i]->title);
+				searchChoices[i] = (char*)malloc(1 * sizeof(char));
+				//searchChoices[i] = array[i]->title + " | "  + array[i]->yearReleased + " | " + array[i]->runningTime + " | " + array[i]->genre;
+				//sprintf(searchChoices[i], "%s | %s mins | %s | %s", array[i]->title, array[i]->runningTime, array[i]->yearReleased, array[i]->genre);
+				//mvwprintw(searchwin, (i+1)+1, 4, "%s", searchChoices[i]);
 			}
 			
+			int searchHighlight = 0;
+			//refresh();
+			wrefresh(searchwin);
+			
+			int choice2;
+			
+			while(1)
+			{
+				wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+				//refresh();
+				wrefresh(searchwin);
+				
+				for(int i = 0; i < searchBSTsize; i++)
+				{
+					if(i==searchHighlight)
+						wattron(searchwin, A_REVERSE);
+					sprintf(searchChoices[i], "%s | %s mins | %s | %s", array[i]->title, array[i]->runningTime, array[i]->yearReleased, array[i]->genre);
+					mvwprintw(searchwin, (i+1)+1, 4, "%s", searchChoices[i]);
+					wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+					wrefresh(searchwin);
+					wattroff(searchwin, A_REVERSE);
+				}
+				choice2 = wgetch(searchwin);
+			
+				switch(choice2)
+				{
+					case KEY_UP:
+						searchHighlight--;
+						if(searchHighlight == -1)
+							searchHighlight = 0;
+						break;
+					case KEY_DOWN:
+						searchHighlight++;
+						if(searchHighlight == searchBSTsize)
+							searchHighlight = searchBSTsize - 1;
+						break;
+					default:
+						break;
+				}
+				
+				if(choice2 == 10)
+					break;
+			}
+			
+			
+			
+			zeroIndex();
+			
+			/* wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+			refresh(); */
 			
 			wrefresh(searchwin);
 		}	
