@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <ncurses.h>
-//#include <menu.h>
 
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 
@@ -11,14 +11,24 @@ int index = 0;
 //struct for movie node
 struct movieNode
 {
-	int key;
 	char * title;
 	char * genre;
 	char * runningTime;
 	char * yearReleased;
 	struct movieNode *left;
 	struct movieNode *right;
-	//int height;
+};
+
+struct userMovieNode
+{
+	char * title;
+	char * genre;
+	char * runningTime;
+	char * yearReleased;
+	char * type;
+	char * date;
+	struct movieNode *left;
+	struct movieNode *right;
 };
 
 //Array for storing menu options.
@@ -251,7 +261,9 @@ void delete_tree(struct movieNode** leaf)
 int main()
 {
     FILE * file;
+	FILE * file2;
     long fsize;
+	long fsize2;
 	
 	/* ITEM **menu_items;
 	MENU **menu;
@@ -281,6 +293,7 @@ int main()
 
         // print
         char * file_content = (char*)malloc(fsize);
+		
 		//int i = 0;
 		struct movieNode *root = NULL;
 		
@@ -288,20 +301,8 @@ int main()
 		{
 			//puts(file_content);
 			sscanf(file_content, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\n", tConst, titleType, primaryTitle, originalTitle, isAdult, startYear, endYear, runtimeMinutes, genres);
-			
-			//sscanf(file_content, "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s", tConst, titleType, primaryTitle, originalTitle, isAdult, startYear, endYear, runtimeMinutes, genres);
-			
-			//printf("%s %s %s %s %s %s %s %s %s\n", tConst, titleType, primaryTitle, originalTitle, isAdult, startYear, endYear, runtimeMinutes, genres);
-			
-			//genres[strlen(genres)-1] = '\0';
-			
-			//printf("   %s | %s | %s | %s\n", primaryTitle, genres, runtimeMinutes, startYear);
-			//printf("%s", primaryTitle);
 			insert(primaryTitle, genres, runtimeMinutes, startYear, &root, (Compare)cmpStr);
 		}
-		
-		
-		//NCURSES start
 		
 		initscr();
 		cbreak();
@@ -311,189 +312,426 @@ int main()
 		getbegyx(stdscr, yBeg, xBeg);
 		getmaxyx(stdscr, yMax, xMax);
 		
-		if(!has_colors())
+		char * userFilename = malloc(30);
+		
+		bool fileNameExitCond = false;
+		
+		while(!fileNameExitCond)
 		{
-			printw("Terminal does not support color");
+			mvprintw(yMax/2, (xMax/4), "Type a username to get started:");
+			echo();
+			wgetstr(stdscr, userFilename);
+			fileNameExitCond = true;
+		}
+		
+		noecho();
+		
+		struct userMovieNode * userRoot = NULL;
+		
+		if(userFilename == NULL || strcmp(userFilename, "\n") == 0 || strcmp(userFilename, "") == 0 )
+		{
+			mvprintw(yMax/2 + 1, (xMax/4), "Error: You must type something in for your username.");
 			getch();
-			return -1;
-		}
-		
-		start_color();
-		init_pair(1, COLOR_YELLOW, COLOR_BLACK);
-		
-		attron(COLOR_PAIR(1));
-		mvprintw(yBeg + 2, (xMax/2)-17, "Internet Movie Database - Main Menu\n\n");
-		attroff(COLOR_PAIR(1));
-		
-		
-		
-		WINDOW * menuwin = newwin(10, 45, yMax - 20, 30);
-		//reuse this line for the search menu: WINDOW * inputWin = newwin(10, xMax - 20, yMax - 25, 10);
-		wborder(menuwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
-		refresh();
-		wrefresh(menuwin);
-		
-		keypad(menuwin, true);
-		
-		char * choices[] = {"Add - Add a movie to your catalog", "Update - Update a record in your catalog", "Delete - Delete a movie from your catalog", "Exit"};
-		int choice;
-		int highlight = 0;
-		
-		while(1)
-		{
-			for(int i = 0; i < 4; i++)
-			{
-				if(i==highlight)
-					wattron(menuwin, A_REVERSE);
-				mvwprintw(menuwin, i+1, 1, (char *)choices[i]);
-				wattroff(menuwin, A_REVERSE);
-			}
-			choice = wgetch(menuwin);
-			
-			switch(choice)
-			{
-				case KEY_UP:
-					highlight--;
-					if(highlight == -1)
-						highlight = 0;
-					break;
-				case KEY_DOWN:
-					highlight++;
-					if(highlight == 4)
-						highlight = 3;
-					break;
-				default:
-					break;
-			}
-			
-			if(choice == 10)
-				break;
-		}
-		
-		if(choices[highlight] == "Exit")
-		{
 			endwin();
 			exit(1);
 		}
-		else if(choices[highlight] == "Add - Add a movie to your catalog")
+		else
 		{
-			/* unpost_menu(menuwin);
-			
-			free_menu(menuwin); */
-			wborder(menuwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
-			wrefresh(menuwin);
-			delwin(menuwin);
-			
-			refresh();
-			
-			WINDOW * searchwin = newwin(30, xMax-20, yMax - 25, 10);
-			wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
-			
-			wrefresh(searchwin);
-			
-			keypad(searchwin, true);
+			file2 = fopen(userFilename, "w");
+			if(file2 != NULL)
+			{
+				
+				fseek(file2,0,SEEK_END);
+				fsize2 = ftell(file2);
+				rewind(file2);
+				
+				if(fsize2 == 0)
+				{
+					break;
+				}
+				
+				char * file_content2 = (char*)malloc(fsize2);
+				char delim[] " | ";
+				
+				while(fgets(file_content2,fsize2,file2))
+				{
+					//sscanf(file_content, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\n", tConst, titleType, primaryTitle, originalTitle, isAdult, startYear, endYear, runtimeMinutes, genres);
+					//insert(primaryTitle, genres, runtimeMinutes, startYear, &root, (Compare)cmpStr);
+				}
+			}
+			else
+			{
+				
+			}
+		}
 		
-			char * searchMenu[] = {"Type a movie name to search...\t"};
-			char * searchChoice = malloc(300);			
+		while(1)
+		{
 			
-			bool exitCond = false;
-			
-			while(!exitCond)
+			if(!has_colors())
 			{
-				mvwprintw(searchwin, 1, 1, (char *)searchMenu[0]);
-				echo();
-				wgetstr(searchwin, searchChoice);
-				exitCond = true;
+				printw("Terminal does not support color");
+				getch();
+				return -1;
 			}
 			
-			noecho();
-			struct movieNode** searchRoot = NULL;
-			search2(searchChoice, root, (Compare)cmpStr, &searchRoot);
+			start_color();
+			init_pair(1, COLOR_YELLOW, COLOR_BLACK);
 			
-			int searchBSTsize = size(searchRoot);
+			attron(COLOR_PAIR(1));
+			mvprintw(yBeg + 2, (xMax/4), "Internet Movie Database - Main Menu\n\n");
+			attroff(COLOR_PAIR(1));
 			
-			struct movieNode * array[(searchBSTsize)];
+			keypad(stdscr, true);
+			//mvprintw(yMax/2, (xMax/4), "Type a filename to get started:\n\n");
 			
-			for(int i = 0; i < size(searchRoot); i++)
-			{
-				array[i] = (struct movieNode*)malloc(sizeof(struct movieNode));
-			}
+			//WINDOW * menuwin = newwin(10, 45, yMax - 20, (xMax/2)-22);
+			WINDOW * menuwin = newwin(10, 45, yMax/4, (xMax/4));
+			//reuse this line for the search menu: WINDOW * inputWin = newwin(10, xMax - 20, yMax - 25, 10);
+			wborder(menuwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+			mvprintw(yBeg+4, (xMax/4), "Editing user catalog for %s", userFilename);
+			refresh();
+			wrefresh(menuwin);
 			
-			in_order_to_array(searchRoot, array);
-			char * searchChoices[searchBSTsize]; 
-			
-			bool exitCond2 = false;
+			keypad(menuwin, true);
 			
 			
-			for(int i = 0; i < searchBSTsize; i++)
-			{
-				searchChoices[i] = (char*)malloc(1 * sizeof(char));
-				//searchChoices[i] = array[i]->title + " | "  + array[i]->yearReleased + " | " + array[i]->runningTime + " | " + array[i]->genre;
-				//sprintf(searchChoices[i], "%s | %s mins | %s | %s", array[i]->title, array[i]->runningTime, array[i]->yearReleased, array[i]->genre);
-				//mvwprintw(searchwin, (i+1)+1, 4, "%s", searchChoices[i]);
-			}
 			
-			int searchHighlight = 0;
-			//refresh();
-			wrefresh(searchwin);
-			
-			int choice2;
+			char * choices[] = {"Add - Add a movie to your catalog", "View Catalog - View your current catalog", "Delete - Delete a movie from your catalog", "Exit"};
+			int choice;
+			int highlight = 0;
 			
 			while(1)
 			{
-				wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
-				//refresh();
-				wrefresh(searchwin);
-				
-				for(int i = 0; i < searchBSTsize; i++)
+				for(int i = 0; i < 4; i++)
 				{
-					if(i==searchHighlight)
-						wattron(searchwin, A_REVERSE);
-					sprintf(searchChoices[i], "%s | %s mins | %s | %s", array[i]->title, array[i]->runningTime, array[i]->yearReleased, array[i]->genre);
-					mvwprintw(searchwin, (i+1)+1, 4, "%s", searchChoices[i]);
-					wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
-					wrefresh(searchwin);
-					wattroff(searchwin, A_REVERSE);
+					if(i==highlight)
+						wattron(menuwin, A_REVERSE);
+					mvwprintw(menuwin, i+1, 1, (char *)choices[i]);
+					wattroff(menuwin, A_REVERSE);
 				}
-				choice2 = wgetch(searchwin);
-			
-				switch(choice2)
+				choice = wgetch(menuwin);
+				
+				switch(choice)
 				{
 					case KEY_UP:
-						searchHighlight--;
-						if(searchHighlight == -1)
-							searchHighlight = 0;
+						highlight--;
+						if(highlight == -1)
+							highlight = 0;
 						break;
 					case KEY_DOWN:
-						searchHighlight++;
-						if(searchHighlight == searchBSTsize)
-							searchHighlight = searchBSTsize - 1;
+						highlight++;
+						if(highlight == 4)
+							highlight = 3;
 						break;
 					default:
 						break;
 				}
 				
-				if(choice2 == 10)
+				if(choice == 10)
 					break;
 			}
 			
+			if(choices[highlight] == "Exit")
+			{
+				endwin();
+				exit(1);
+			}
+			else if(choices[highlight] == "Add - Add a movie to your catalog")
+			{
+				/* unpost_menu(menuwin);
+				
+				free_menu(menuwin); */
+				wborder(menuwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
+				wclear(menuwin);
+				wrefresh(menuwin);
+				delwin(menuwin);
+				
+				attron(COLOR_PAIR(1));
+				mvprintw(yBeg + 2, (xMax/4), "Internet Movie Database - Add to Catalog\n\n");
+				attroff(COLOR_PAIR(1));
+				
+				refresh();
+				
+				//WINDOW * searchwin = newwin(30, xMax-20, yMax - 25, 10);
+				WINDOW * searchwin = newwin(yMax/1.5, xMax, yMax/4, xBeg+(xMax/16));
+				wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+				
+				wrefresh(searchwin);
+				
+				keypad(searchwin, true);
 			
-			
-			zeroIndex();
-			
-			/* wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
-			refresh(); */
-			
-			wrefresh(searchwin);
-		}	
-		
-		getch();
-		endwin();
-		
+				char * searchMenu[] = {"Type a movie name to search...\t\n "};
+				char * searchChoice = malloc(300);			
+				
+				bool exitCond = false;
+				
+				while(!exitCond)
+				{
+					mvwprintw(searchwin, 1, 1, (char *)searchMenu[0]);
+					echo();
+					wgetstr(searchwin, searchChoice);
+					exitCond = true;
+				}
+				
+				noecho();
+				struct movieNode** searchRoot = NULL;
+				search2(searchChoice, root, (Compare)cmpStr, &searchRoot);
+				
+				int searchBSTsize = size(searchRoot);
+				
+				struct movieNode * array[(searchBSTsize)];
+				
+				for(int i = 0; i < size(searchRoot); i++)
+				{
+					array[i] = (struct movieNode*)malloc(sizeof(struct movieNode));
+				}
+				
+				in_order_to_array(searchRoot, array);
+				char * searchChoices[searchBSTsize]; 
+				
+				bool exitCond2 = false;
+				
+				
+				for(int i = 0; i < searchBSTsize; i++)
+				{
+					searchChoices[i] = (char*)malloc(1 * sizeof(char));
+				}
+				
+				int searchHighlight = 0;
+				//refresh();
+				int numRecordsToPrint = 10;
+				if(yMax < 24)
+				{
+					numRecordsToPrint = 5;
+				}
+				
+				bool tooManyRecords = false;
+				if(searchBSTsize > numRecordsToPrint)
+				{
+					tooManyRecords = true;
+				}
+				
+				wrefresh(searchwin);
+				
+				int choice2;
+				
+				while(1)
+				{
+					wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+					//refresh();
+					wrefresh(searchwin);
+					int i = 0; 
+					int arrayCounter = 0;
+					//for(i = 0; i < numRecordsToPrint; i++)
+					if(searchBSTsize < numRecordsToPrint)
+					{
+						arrayCounter = searchBSTsize;
+					}
+					else 
+					{
+						arrayCounter = numRecordsToPrint;
+					}
+					
+					if(searchBSTsize > 30)
+					{
+						mvwprintw(searchwin, yMax-1, 1, "Search has over 30 records returned, please be more specific in your search.");
+					}
+					
+					for(i = 0; i < arrayCounter; i++)
+					{
+						if(i==searchHighlight)
+							wattron(searchwin, A_REVERSE);
+						sprintf(searchChoices[i], "%s | %s mins | %s | %s", array[i]->title, array[i]->runningTime, array[i]->yearReleased, array[i]->genre);
+						mvwprintw(searchwin, (i+1)+1, 1, "%s", searchChoices[i]);
+						
+						wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+						wattroff(searchwin, A_REVERSE);
+						wrefresh(searchwin);
+					}
+					
+					if(tooManyRecords)
+					{
+						mvwprintw(searchwin, arrayCounter+2, 1, "Next");
+					}
+					
+					choice2 = wgetch(searchwin);
+				
+					switch(choice2)
+					{
+						case KEY_UP:
+							searchHighlight--;
+							if(searchHighlight == -1)
+							{
+								searchHighlight = 0;
+								//wattroff(searchwin, A_REVERSE);							
+							}
+							if(tooManyRecords)
+							{
+								if(searchHighlight > arrayCounter+1)
+								{
+									searchHighlight =  arrayCounter;
+								}
+								else if(searchHighlight == arrayCounter)
+								{
+									wattron(searchwin, A_REVERSE);
+									mvwprintw(searchwin, arrayCounter+2, 1, "Next");
+									wattroff(searchwin, A_REVERSE);
+								}
+								else
+								{
+									mvwprintw(searchwin, arrayCounter+2, 1, "Next");
+								} 
+							}
+							else 
+							{
+								if(searchHighlight >= arrayCounter)
+								{
+									searchHighlight = arrayCounter - 1;
+								}
+							}
+							break;
+						case KEY_DOWN:
+							searchHighlight++;
+							if(tooManyRecords)
+							{
+								if(searchHighlight > arrayCounter+1)
+								{
+									searchHighlight =  arrayCounter;
+								}
+								else if(searchHighlight == arrayCounter)
+								{
+									wattron(searchwin, A_REVERSE);
+									mvwprintw(searchwin, arrayCounter+2, 1, "Next");
+									wattroff(searchwin, A_REVERSE);
+								}
+								else
+								{
+									mvwprintw(searchwin, arrayCounter+2, 1, "Next");
+								} 
+							}
+							else 
+							{
+								if(searchHighlight >= arrayCounter)
+								{
+									searchHighlight = arrayCounter - 1;
+								}
+							}
+							
+							break;
+						default:
+							break;
+					}
+					
+					if(choice2 == 10)
+						break;
+				}
+				
+				if(searchChoices[searchHighlight] == "Next")
+				{
+					//do some stuff here
+					//mvprintw(yMax-1, xBeg, "HEYOOOO");
+				}
+				else
+				{
+					/* char * movieTitle = (char *)malloc(sizeof(array[searchHighlight]->title));
+					char * movieRunningTime = (char *)malloc(sizeof(array[searchHighlight]->runningTime);
+					char * movieGenre = (char *);
+					char * */ 
+					char * typeChoices[] = {"DVD", "BluRay", "Digital"};
+					char * mediaType = (char *)malloc(10 * sizeof(char));
+					time_t t = time(NULL);
+					struct tm *tm = localtime(&t);
+					char date[64];
+					strftime(date, sizeof(date), "%c", tm);
+					
+					wclear(searchwin);
+					wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+					wrefresh(searchwin);
+					
+					int typeHighlight = 0;
+					int typeChoice;
+					// mvwprintw("")
+					while(1)
+					{
+						mvwprintw(searchwin, 1, 1, "%s", array[searchHighlight]->title);
+						
+						for(int i = 0; i < 3; i++)
+						{
+							if(i==typeHighlight)
+								wattron(searchwin, A_REVERSE);
+							mvwprintw(searchwin, i+2, 1, (char *)typeChoices[i]);
+							wattroff(searchwin, A_REVERSE);
+						}
+						typeChoice = wgetch(searchwin);
+						
+						switch(typeChoice)
+						{
+							case KEY_UP:
+								typeHighlight--;
+								if(typeHighlight == -1)
+									typeHighlight = 0;
+								break;
+							case KEY_DOWN:
+								typeHighlight++;
+								if(typeHighlight == 3)
+									typeHighlight = 2;
+								break;
+							default:
+								break;
+						}
+						
+						if(typeChoice == 10)
+							break;
+						wrefresh(searchwin);
+					}
+					
+					if(typeChoices[typeHighlight] == "DVD")
+					{
+						mediaType = "DVD";
+					}
+					else if(typeChoices[typeHighlight] == "BluRay")
+					{
+						mediaType = "BluRay";
+					}
+					else if(typeChoices[typeHighlight] == "Digital")
+					{
+						mediaType = "Digital";
+					}
+					
+					char * recordToAdd = (char*)malloc(150 * sizeof(char));
+					array[searchHighlight]->genre[strlen(array[searchHighlight]->genre) - 1] = '\0';
+					sprintf(recordToAdd, "%s | %s | %s | %s | %s | %s", array[searchHighlight]->title, array[searchHighlight]->runningTime, array[searchHighlight]->yearReleased, array[searchHighlight]->genre, mediaType, date);
+					fputs(recordToAdd, file2);
+					mvprintw(yMax-1, xBeg, "Printed %s to file", array[searchHighlight]->title);
+					
+					getch();
+					wborder(searchwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
+					wclear(searchwin);
+					wrefresh(searchwin);
+					delwin(searchwin);
+					erase();
+					endwin();
+				}
+				
+				
+				zeroIndex();
+				wrefresh(searchwin);
+			}	
+			else if(choices[highlight] == "View Catalog - View your current catalog")
+			{
+				/* char * catalog_content = (char*)malloc(fsize2);
+				fseek(file,0,SEEK_END);
+				fsize = ftell(file);
+				rewind(file); */
+				
+				
+			}	
+		}
 		/* struct movieNode* searchRoot = NULL;
 		search2("Life of", root, (Compare)cmpStr, &searchRoot);
 		in_order(searchRoot); */
-		
+		endwin();
 		
 		//freeing up memory
 		free(tConst);
@@ -512,6 +750,7 @@ int main()
     }
 	
     fclose(file);
+	fclose(file2);
 
     return 0;
 }
