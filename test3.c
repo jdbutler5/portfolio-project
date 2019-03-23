@@ -83,6 +83,43 @@ void insert(char* key, char * genres, char * runningTimeMinutes, char * startYea
 	}
 }
 
+//Function for inserting into the binary search tree.
+void userInsert(char* key, char * genres, char * runningTimeMinutes, char * startYear, char * mediaType, char * dateEntered, struct userMovieNode** leaf, Compare cmp)
+{
+	int res;
+	if (*leaf == NULL)
+	{
+		*leaf = (struct userMovieNode*)malloc(sizeof(struct userMovieNode));
+		(*leaf)->title = malloc(strlen (key) + 1);
+		strcpy((*leaf)->title, key);
+		
+		(*leaf)->genre = malloc(strlen (genres) + 1);
+		strcpy((*leaf)->genre, genres);
+		
+		(*leaf)->runningTime = malloc(strlen (runningTimeMinutes) + 1);
+		strcpy((*leaf)->runningTime, runningTimeMinutes);
+		
+		(*leaf)->yearReleased = malloc(strlen (startYear) + 1);
+		strcpy((*leaf)->yearReleased, startYear);
+		
+		(*leaf)->type = malloc(strlen (mediaType) + 1);
+		strcpy((*leaf)->type, mediaType);
+		
+		(*leaf)->date = malloc(strlen (dateEntered) + 1);
+		strcpy((*leaf)->date, dateEntered);
+		
+		(*leaf)->left = (*leaf)->right = NULL;
+	}
+	else
+	{
+		res = cmp(key, (*leaf)->title);
+		if(res < 0)
+			userInsert(key, genres, runningTimeMinutes, startYear, mediaType, dateEntered, &(*leaf)->left, cmp);
+		else if(res > 0)
+			userInsert(key, genres, runningTimeMinutes, startYear, mediaType, dateEntered, &(*leaf)->right, cmp);
+	}
+}
+
 //compares value of new node against previous
 int cmpStr(const char *a, const char *b)
 {
@@ -116,6 +153,19 @@ int size(struct movieNode* node)
 	}
 }
 
+int userSize(struct userMovieNode* node)
+{
+	int c = 1;
+	if(node == NULL)
+		return 0;
+	else
+	{
+		c += userSize(node->left);
+		c += userSize(node->right);
+		return c;
+	}
+}
+
 void in_order_to_array(struct movieNode *root, struct movieNode *array[])
 {
 	if(root == NULL)
@@ -138,6 +188,33 @@ void in_order_to_array(struct movieNode *root, struct movieNode *array[])
 	//printf("%d\n", index);
 	
 	in_order_to_array(root->right, array);
+}
+
+void user_in_order_to_array(struct userMovieNode *root, struct userMovieNode *array[])
+{
+	if(root == NULL)
+	{	
+		return;
+	}
+	
+	user_in_order_to_array(root->left, array);
+	
+	array[index]->title = malloc(strlen(root->title) + 1);
+	array[index]->title = root->title;
+	array[index]->genre = malloc(strlen(root->genre) + 1);
+	array[index]->genre = root->genre;
+	array[index]->runningTime = malloc(strlen(root->runningTime) + 1);
+	array[index]->runningTime = root->runningTime;
+	array[index]->yearReleased = malloc(strlen(root->yearReleased) + 1);
+	array[index]->yearReleased = root->yearReleased; 
+	array[index]->type = malloc(strlen(root->type) + 1);
+	array[index]->type = root->type; 
+	array[index]->date = malloc(strlen(root->date) + 1);
+	array[index]->date = root->date; 
+	index++;
+	//printf("%d\n", index);
+	
+	user_in_order_to_array(root->right, array);
 }
 
 void zeroIndex()
@@ -327,6 +404,7 @@ int main()
 		noecho();
 		
 		struct userMovieNode * userRoot = NULL;
+		bool keepNULL = false;
 		
 		if(userFilename == NULL || strcmp(userFilename, "\n") == 0 || strcmp(userFilename, "") == 0 )
 		{
@@ -337,7 +415,7 @@ int main()
 		}
 		else
 		{
-			file2 = fopen(userFilename, "w");
+			file2 = fopen(userFilename, "a+");
 			if(file2 != NULL)
 			{
 				
@@ -347,17 +425,27 @@ int main()
 				
 				if(fsize2 == 0)
 				{
-					break;
+					keepNULL = true;
 				}
 				
 				char * file_content2 = (char*)malloc(fsize2);
-				char delim[] " | ";
+				char * tTitle = malloc(100*sizeof(char));
+				char * tRunningTime = malloc(10*sizeof(char));
+				char * tYearReleased = malloc(5*sizeof(char));
+				char * tGenre = malloc(100*sizeof(char));
+				char * tType = malloc(10*sizeof(char));
+				char * tDate = malloc(64*sizeof(char));
 				
 				while(fgets(file_content2,fsize2,file2))
 				{
-					//sscanf(file_content, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\n", tConst, titleType, primaryTitle, originalTitle, isAdult, startYear, endYear, runtimeMinutes, genres);
-					//insert(primaryTitle, genres, runtimeMinutes, startYear, &root, (Compare)cmpStr);
+					sscanf(file_content2, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\n", tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate);
+					if(!keepNULL)
+						userInsert(tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate, &userRoot, (Compare)cmpStr);
+					//mvprintw(yMax-1, xBeg, "%s %s %s %s %s %s", tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate);
 				}
+				mvprintw(yMax-1, xBeg, "%s AAHA %s %s %s %s %s", tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate);
+				//getch();
+				//in_order(userRoot);
 			}
 			else
 			{
@@ -439,9 +527,6 @@ int main()
 			}
 			else if(choices[highlight] == "Add - Add a movie to your catalog")
 			{
-				/* unpost_menu(menuwin);
-				
-				free_menu(menuwin); */
 				wborder(menuwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
 				wclear(menuwin);
 				wrefresh(menuwin);
@@ -701,7 +786,7 @@ int main()
 					
 					char * recordToAdd = (char*)malloc(150 * sizeof(char));
 					array[searchHighlight]->genre[strlen(array[searchHighlight]->genre) - 1] = '\0';
-					sprintf(recordToAdd, "%s | %s | %s | %s | %s | %s", array[searchHighlight]->title, array[searchHighlight]->runningTime, array[searchHighlight]->yearReleased, array[searchHighlight]->genre, mediaType, date);
+					sprintf(recordToAdd, "%s\t%s\t%s\t%s\t%s\t%s\n", array[searchHighlight]->title, array[searchHighlight]->runningTime, array[searchHighlight]->yearReleased, array[searchHighlight]->genre, mediaType, date);
 					fputs(recordToAdd, file2);
 					mvprintw(yMax-1, xBeg, "Printed %s to file", array[searchHighlight]->title);
 					
@@ -720,12 +805,43 @@ int main()
 			}	
 			else if(choices[highlight] == "View Catalog - View your current catalog")
 			{
-				/* char * catalog_content = (char*)malloc(fsize2);
-				fseek(file,0,SEEK_END);
-				fsize = ftell(file);
-				rewind(file); */
+				wborder(menuwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
+				wclear(menuwin);
+				wrefresh(menuwin);
+				delwin(menuwin);
+				erase();
 				
+				attron(COLOR_PAIR(1));
+				mvprintw(yBeg + 2, (xMax/4), "Internet Movie Database - View Catalog\n\n");
+				attroff(COLOR_PAIR(1));
 				
+				refresh();
+				
+				//WINDOW * searchwin = newwin(30, xMax-20, yMax - 25, 10);
+				WINDOW * printwin = newwin(yMax/1.5, xMax, yMax/4, xBeg+(xMax/16));
+				wborder(printwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+				
+				wrefresh(printwin);
+				
+				keypad(printwin, true);
+				
+				int userBSTsize = userSize(userRoot);
+				/* 
+				struct userMovieNode * array[(userBSTsize)];
+				
+				for(int i = 0; i < userBSTsize; i++)
+				{
+					array[i] = (struct userMovieNode*)malloc(sizeof(struct userMovieNode));
+				} */
+				
+				/* user_in_order_to_array(userRoot, array);
+				
+				for(int i = 0; i < userBSTsize; i++)
+				{
+					mvwprintw(printwin, i+2, 1, "%s", array[i]->title);
+				} */
+				zeroIndex();
+				wrefresh(printwin);
 			}	
 		}
 		/* struct movieNode* searchRoot = NULL;
