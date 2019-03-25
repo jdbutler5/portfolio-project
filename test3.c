@@ -403,7 +403,7 @@ int main()
 		
 		noecho();
 		
-		struct userMovieNode * userRoot = NULL;
+		struct userMovieNode *userRoot = NULL;
 		bool keepNULL = false;
 		
 		if(userFilename == NULL || strcmp(userFilename, "\n") == 0 || strcmp(userFilename, "") == 0 )
@@ -415,7 +415,11 @@ int main()
 		}
 		else
 		{
-			file2 = fopen(userFilename, "a+");
+			char * userlog = malloc(10 + sizeof(userFilename) * sizeof(char));
+			//strcat(userlog, ".");
+			strcat(userlog, userFilename);
+			strcat(userlog, ".log");
+			file2 = fopen(userlog, "a+");
 			if(file2 != NULL)
 			{
 				
@@ -423,10 +427,10 @@ int main()
 				fsize2 = ftell(file2);
 				rewind(file2);
 				
-				if(fsize2 == 0)
+				/* if(fsize2 == 0)
 				{
 					keepNULL = true;
-				}
+				} */
 				
 				char * file_content2 = (char*)malloc(fsize2);
 				char * tTitle = malloc(100*sizeof(char));
@@ -439,17 +443,18 @@ int main()
 				while(fgets(file_content2,fsize2,file2))
 				{
 					sscanf(file_content2, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\n", tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate);
-					if(!keepNULL)
+					//if(!keepNULL)
 						userInsert(tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate, &userRoot, (Compare)cmpStr);
-					//mvprintw(yMax-1, xBeg, "%s %s %s %s %s %s", tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate);
+					//mvprintw(yMax-1, xBeg, "%s AHAHHAA %s %s %s %s %s", tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate);
 				}
 				mvprintw(yMax-1, xBeg, "%s AAHA %s %s %s %s %s", tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate);
 				//getch();
 				//in_order(userRoot);
 			}
-			else
+			else 
 			{
-				
+				/* userRoot = NULL;
+				fsize = 0; */
 			}
 		}
 		
@@ -465,12 +470,13 @@ int main()
 			
 			start_color();
 			init_pair(1, COLOR_YELLOW, COLOR_BLACK);
-			
+			clear();
 			attron(COLOR_PAIR(1));
 			mvprintw(yBeg + 2, (xMax/4), "Internet Movie Database - Main Menu\n\n");
 			attroff(COLOR_PAIR(1));
 			
 			keypad(stdscr, true);
+			
 			//mvprintw(yMax/2, (xMax/4), "Type a filename to get started:\n\n");
 			
 			//WINDOW * menuwin = newwin(10, 45, yMax - 20, (xMax/2)-22);
@@ -485,7 +491,7 @@ int main()
 			
 			
 			
-			char * choices[] = {"Add - Add a movie to your catalog", "View Catalog - View your current catalog", "Delete - Delete a movie from your catalog", "Exit"};
+			char * choices[] = {"Add - Add a movie to your catalog", "Update Catalog - Update current catalog", "Delete - Delete a movie from your catalog", "Exit"};
 			int choice;
 			int highlight = 0;
 			
@@ -719,10 +725,6 @@ int main()
 				}
 				else
 				{
-					/* char * movieTitle = (char *)malloc(sizeof(array[searchHighlight]->title));
-					char * movieRunningTime = (char *)malloc(sizeof(array[searchHighlight]->runningTime);
-					char * movieGenre = (char *);
-					char * */ 
 					char * typeChoices[] = {"DVD", "BluRay", "Digital"};
 					char * mediaType = (char *)malloc(10 * sizeof(char));
 					time_t t = time(NULL);
@@ -736,7 +738,7 @@ int main()
 					
 					int typeHighlight = 0;
 					int typeChoice;
-					// mvwprintw("")
+					
 					while(1)
 					{
 						mvwprintw(searchwin, 1, 1, "%s", array[searchHighlight]->title);
@@ -786,9 +788,12 @@ int main()
 					
 					char * recordToAdd = (char*)malloc(150 * sizeof(char));
 					array[searchHighlight]->genre[strlen(array[searchHighlight]->genre) - 1] = '\0';
-					sprintf(recordToAdd, "%s\t%s\t%s\t%s\t%s\t%s\n", array[searchHighlight]->title, array[searchHighlight]->runningTime, array[searchHighlight]->yearReleased, array[searchHighlight]->genre, mediaType, date);
-					fputs(recordToAdd, file2);
-					mvprintw(yMax-1, xBeg, "Printed %s to file", array[searchHighlight]->title);
+					
+					userInsert(array[searchHighlight]->title, array[searchHighlight]->genre, array[searchHighlight]->runningTime, array[searchHighlight]->yearReleased, mediaType, date, &userRoot, (Compare)cmpStr);
+					
+					//fclose(file2);
+					mvprintw(yMax-1, xBeg, "Added %s to %s's catalog", array[searchHighlight]->title, userFilename);
+					//mvprintw(yMax-2, xBeg, "%s", recordToAdd);
 					
 					getch();
 					wborder(searchwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
@@ -803,8 +808,9 @@ int main()
 				zeroIndex();
 				wrefresh(searchwin);
 			}	
-			else if(choices[highlight] == "View Catalog - View your current catalog")
+			else if(choices[highlight] == "Update Catalog - Update current catalog")
 			{
+				//file2 = fopen(userlog, "a+");
 				wborder(menuwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
 				wclear(menuwin);
 				wrefresh(menuwin);
@@ -826,27 +832,86 @@ int main()
 				keypad(printwin, true);
 				
 				int userBSTsize = userSize(userRoot);
-				/* 
+				
+				
+				
 				struct userMovieNode * array[(userBSTsize)];
 				
 				for(int i = 0; i < userBSTsize; i++)
 				{
 					array[i] = (struct userMovieNode*)malloc(sizeof(struct userMovieNode));
-				} */
+				} 
 				
-				/* user_in_order_to_array(userRoot, array);
+				user_in_order_to_array(userRoot, array);
 				
-				for(int i = 0; i < userBSTsize; i++)
+				/* for(int i = 0; i < userBSTsize; i++)
 				{
 					mvwprintw(printwin, i+2, 1, "%s", array[i]->title);
 				} */
+				
+				int printChoice;
+				int printHighlight = 0;
+				
+				while(1)
+				{
+					for(int i = 0; i < userBSTsize; i++)
+					{
+						if(i==printHighlight)
+							wattron(printwin, A_REVERSE);
+						mvwprintw(printwin, i+1, 1, "%s", array[i]->title);
+						wattroff(printwin, A_REVERSE);
+						//mvwprintw(printwin, i+2, 1, "%d", userBSTsize);
+					}
+					printChoice = wgetch(printwin);
+					
+					switch(printChoice)
+					{
+						case KEY_UP:
+							printHighlight--;
+							if(printHighlight < 0)
+								printHighlight = 0;
+							break;
+						case KEY_DOWN:
+							printHighlight++;
+							if(printHighlight == userBSTsize)
+								printHighlight = userBSTsize - 1;
+							break;
+						default:
+							break;
+					}
+					
+					if(printChoice == 10)
+						break;
+				} 
+				
 				zeroIndex();
 				wrefresh(printwin);
 			}	
+			
+			/* int userBSTsize = size(userRoot);
+
+			struct userMovieNode * array[(userBSTsize)];
+			for(int i = 0; i < userBSTsize; i++)
+			{
+				array[i] = (struct userMovieNode*)malloc(sizeof(struct userMovieNode));
+			} 
+			
+			user_in_order_to_array(userRoot, array); */
+			
+			/* char * recordToAdd = (char*)malloc(150 * sizeof(char));
+			
+			for(int i = 0; i < userBSTsize; i++)
+			{
+				sprintf(recordToAdd, "%s\t%s\t%s\t%s\t%s\t%s\n", array[i]->title, array[i]->runningTime, array[i]->yearReleased, array[i]->genre, array[i]->type, array[i]->date);
+				mvprintw(yMax-i, 15, "%s", recordToAdd);
+				fputs(recordToAdd, file2);
+			}  */
+			//getch();
 		}
 		/* struct movieNode* searchRoot = NULL;
 		search2("Life of", root, (Compare)cmpStr, &searchRoot);
 		in_order(searchRoot); */
+		
 		endwin();
 		
 		//freeing up memory
