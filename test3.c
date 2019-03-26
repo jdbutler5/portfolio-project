@@ -348,6 +348,7 @@ int main()
 	int c; */
 	
     file = fopen("movie_records","r");
+	char * userFilename = malloc(30);
 	// file = fopen("datatest2.txt","r");
     if(file != NULL)
 	{
@@ -389,8 +390,6 @@ int main()
 		getbegyx(stdscr, yBeg, xBeg);
 		getmaxyx(stdscr, yMax, xMax);
 		
-		char * userFilename = malloc(30);
-		
 		bool fileNameExitCond = false;
 		
 		while(!fileNameExitCond)
@@ -403,7 +402,7 @@ int main()
 		
 		noecho();
 		
-		struct userMovieNode *userRoot = NULL;
+		struct userMovieNode ** userRoot = NULL;
 		bool keepNULL = false;
 		
 		if(userFilename == NULL || strcmp(userFilename, "\n") == 0 || strcmp(userFilename, "") == 0 )
@@ -419,7 +418,7 @@ int main()
 			//strcat(userlog, ".");
 			strcat(userlog, userFilename);
 			strcat(userlog, ".log");
-			file2 = fopen(userlog, "a+");
+			file2 = fopen(userlog, "r");
 			if(file2 != NULL)
 			{
 				
@@ -427,10 +426,11 @@ int main()
 				fsize2 = ftell(file2);
 				rewind(file2);
 				
-				/* if(fsize2 == 0)
+				if(fsize2 == 0)
 				{
 					keepNULL = true;
-				} */
+					
+				}
 				
 				char * file_content2 = (char*)malloc(fsize2);
 				char * tTitle = malloc(100*sizeof(char));
@@ -439,15 +439,30 @@ int main()
 				char * tGenre = malloc(100*sizeof(char));
 				char * tType = malloc(10*sizeof(char));
 				char * tDate = malloc(64*sizeof(char));
+				//size_t read;
 				
+				userRoot = NULL;
+				int i = 0;
 				while(fgets(file_content2,fsize2,file2))
 				{
-					sscanf(file_content2, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\n", tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate);
+					sscanf(file_content2, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]", tTitle, tRunningTime, tYearReleased, tGenre, tType, tDate);
+					//mvprintw(yMax-1, 0, "%s", file_content2);
+					if(file_content2[0] != '\0' && file_content2[0] != '\t' && file_content2[0] != '\n' && file_content2[0] != '\r')
+						userInsert(tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate, &userRoot, (Compare)cmpStr);
+					//mvprintw(yMax-1, xBeg, "%d %s %f", i, tTitle, fsize2);
+				}
+				
+				/* while((read = getline(&file_content2,&fsize2,file2) != -1))
+				{
+					sscanf(file_content2, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\n", tTitle, tRunningTime, tYearReleased, tGenre, tType, tDate);
 					//if(!keepNULL)
 						userInsert(tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate, &userRoot, (Compare)cmpStr);
-					//mvprintw(yMax-1, xBeg, "%s AHAHHAA %s %s %s %s %s", tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate);
-				}
-				mvprintw(yMax-1, xBeg, "%s AAHA %s %s %s %s %s", tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate);
+					mvprintw(yMax-1, xBeg, "%d %s %f", i, tTitle, fsize2);
+					i++;
+					getch();
+				} */
+				
+				//mvprintw(yMax-1, xBeg, "%d", userSize(userRoot));
 				//getch();
 				//in_order(userRoot);
 			}
@@ -455,7 +470,10 @@ int main()
 			{
 				/* userRoot = NULL;
 				fsize = 0; */
+				mvprintw(yMax-1, 0, "The file is null.");
+				getch();
 			}
+			//freopen(userlog, "w", file2);
 		}
 		
 		while(1)
@@ -528,6 +546,84 @@ int main()
 			
 			if(choices[highlight] == "Exit")
 			{
+				
+				//char * userlog = malloc(10 + sizeof(userFilename) * sizeof(char));
+				FILE * file3;
+				char userlog[30] = "";
+				strcpy(userlog, userFilename);
+				strcat(userlog, ".log");
+				
+				bool file2Null = false;
+				struct userMovieNode** newUserRoot = NULL;
+				
+				if(file2 == NULL)
+				{
+					file2Null = true;
+					file3 = fopen(userlog, "w");
+				}
+				else
+				{
+					
+					
+					/* fseek(file2,0,SEEK_END);
+					fsize2 = ftell(file2);
+					rewind(file2);
+					
+					if(fsize2 == 0)
+					{
+						keepNULL = true;
+					}
+					
+					char * file_content2 = (char*)malloc(fsize2);
+					char * tTitle = malloc(100*sizeof(char));
+					char * tRunningTime = malloc(10*sizeof(char));
+					char * tYearReleased = malloc(5*sizeof(char));
+					char * tGenre = malloc(100*sizeof(char));
+					char * tType = malloc(10*sizeof(char));
+					char * tDate = malloc(64*sizeof(char));
+					
+					while(fgets(file_content2,fsize2,file2))
+					{
+						sscanf(file_content2, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\n", tTitle, tRunningTime, tYearReleased, tGenre, tType, tDate);
+						//if(!keepNULL)
+							userInsert(tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate, &newUserRoot, (Compare)cmpStr);
+						//mvprintw(yMax-1, xBeg, "%s AHAHHAA %s %s %s %s %s", tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate);
+					} */
+					
+					file3 = freopen(userlog, "w", file2);
+				}
+				
+				//mvprintw(yMax - 1, 40, "%d", index);
+				
+				int userArraySize = userSize(userRoot);
+
+				struct userMovieNode * userArray[(userArraySize)];
+				for(int i = 0; i < userArraySize; i++)
+				{
+					userArray[i] = (struct userMovieNode*)malloc(sizeof(struct userMovieNode));
+				}
+				
+				mvprintw(yMax-1, 0, "%d", userArraySize);
+				user_in_order_to_array(userRoot, userArray);  
+				
+				char * stringToAdd = (char*)malloc(150 * sizeof(char));
+				
+				for(int i = 0; i < userArraySize; i++)
+				{
+					if(userArray[i]->date[strlen(userArray[i]->date) - 1] == '\n')
+						userArray[i]->date[strlen(userArray[i]->date) - 1] = '\0';
+					sprintf(stringToAdd, "%s\t%s\t%s\t%s\t%s\t%s\n", userArray[i]->title, userArray[i]->runningTime, userArray[i]->yearReleased, userArray[i]->genre, userArray[i]->type, userArray[i]->date);
+					mvprintw(yBeg+i, 0, "%s", stringToAdd);
+					if(file2Null)
+						fputs(stringToAdd, file3);
+					else
+						fputs(stringToAdd, file2);
+				} 
+				getch();
+				if(file2 != NULL)
+					fclose(file2);
+				if(file3 != NULL)
+					fclose(file3);
 				endwin();
 				exit(1);
 			}
@@ -790,10 +886,8 @@ int main()
 					array[searchHighlight]->genre[strlen(array[searchHighlight]->genre) - 1] = '\0';
 					
 					userInsert(array[searchHighlight]->title, array[searchHighlight]->genre, array[searchHighlight]->runningTime, array[searchHighlight]->yearReleased, mediaType, date, &userRoot, (Compare)cmpStr);
-					
-					//fclose(file2);
 					mvprintw(yMax-1, xBeg, "Added %s to %s's catalog", array[searchHighlight]->title, userFilename);
-					//mvprintw(yMax-2, xBeg, "%s", recordToAdd);
+					
 					
 					getch();
 					wborder(searchwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
@@ -888,29 +982,11 @@ int main()
 				wrefresh(printwin);
 			}	
 			
-			/* int userBSTsize = size(userRoot);
-
-			struct userMovieNode * array[(userBSTsize)];
-			for(int i = 0; i < userBSTsize; i++)
-			{
-				array[i] = (struct userMovieNode*)malloc(sizeof(struct userMovieNode));
-			} 
 			
-			user_in_order_to_array(userRoot, array); */
 			
-			/* char * recordToAdd = (char*)malloc(150 * sizeof(char));
 			
-			for(int i = 0; i < userBSTsize; i++)
-			{
-				sprintf(recordToAdd, "%s\t%s\t%s\t%s\t%s\t%s\n", array[i]->title, array[i]->runningTime, array[i]->yearReleased, array[i]->genre, array[i]->type, array[i]->date);
-				mvprintw(yMax-i, 15, "%s", recordToAdd);
-				fputs(recordToAdd, file2);
-			}  */
-			//getch();
 		}
-		/* struct movieNode* searchRoot = NULL;
-		search2("Life of", root, (Compare)cmpStr, &searchRoot);
-		in_order(searchRoot); */
+		
 		
 		endwin();
 		
