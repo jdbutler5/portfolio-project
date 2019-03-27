@@ -78,34 +78,32 @@ void insert(char* key, char * genres, char * runningTimeMinutes, char * startYea
 			insert(key, genres, runningTimeMinutes, startYear, &(*leaf)->left, cmp);
 		else if(res > 0)
 			insert(key, genres, runningTimeMinutes, startYear, &(*leaf)->right, cmp);
-		//else
-			//printf("Key '%s' already in tree.", key);
 	}
 }
 
-//Function for inserting into the binary search tree.
+//Function for inserting into the user catalog. User catalog is stored in temporary binary search tree.
 void userInsert(char* key, char * genres, char * runningTimeMinutes, char * startYear, char * mediaType, char * dateEntered, struct userMovieNode** leaf, Compare cmp)
 {
 	int res;
 	if (*leaf == NULL)
 	{
 		*leaf = (struct userMovieNode*)malloc(sizeof(struct userMovieNode));
-		(*leaf)->title = malloc(strlen (key) + 1);
+		(*leaf)->title = malloc(strlen(key) + 1);
 		strcpy((*leaf)->title, key);
 		
-		(*leaf)->genre = malloc(strlen (genres) + 1);
+		(*leaf)->genre = malloc(strlen(genres) + 1);
 		strcpy((*leaf)->genre, genres);
 		
-		(*leaf)->runningTime = malloc(strlen (runningTimeMinutes) + 1);
+		(*leaf)->runningTime = malloc(strlen(runningTimeMinutes) + 1);
 		strcpy((*leaf)->runningTime, runningTimeMinutes);
 		
-		(*leaf)->yearReleased = malloc(strlen (startYear) + 1);
+		(*leaf)->yearReleased = malloc(strlen(startYear) + 1);
 		strcpy((*leaf)->yearReleased, startYear);
 		
-		(*leaf)->type = malloc(strlen (mediaType) + 1);
+		(*leaf)->type = malloc(strlen(mediaType) + 1);
 		strcpy((*leaf)->type, mediaType);
 		
-		(*leaf)->date = malloc(strlen (dateEntered) + 1);
+		(*leaf)->date = malloc(strlen(dateEntered) + 1);
 		strcpy((*leaf)->date, dateEntered);
 		
 		(*leaf)->left = (*leaf)->right = NULL;
@@ -126,20 +124,22 @@ int cmpStr(const char *a, const char *b)
 	return (strcmp(a,b));
 }
 
-//Prints out the entire BST in order.
+//Prints out the entire movie BST in order.
+//TODO: delete, this was used for testing only
 void in_order(struct movieNode *root)
 {
 	if(root != NULL)
 	{
 		in_order(root->left);
 		
-		//printf("   %s | %s | %s | %s \n", root->title, root->genre, root->runningTime, root->yearReleased);
 		printf("%s\n", root->title);
 		
 		in_order(root->right);
 	}
 }
 
+//Prints out the user's catalog in order.
+//TODO: delete, this was used for testing only
 void user_in_order(struct userMovieNode *root)
 {
 	if(root != NULL)
@@ -147,8 +147,6 @@ void user_in_order(struct userMovieNode *root)
 		user_in_order(root->left);
 		
 		printf("   %s | %s | %s | %s \n", root->title, root->genre, root->runningTime, root->yearReleased);
-		//mvprintw(0, 0, "%s\n", root->title);
-		//index++;
 		
 		user_in_order(root->right);
 	}
@@ -182,14 +180,13 @@ int userSize(struct userMovieNode* node)
 	}
 }
 
-//Sends the current BST to an array so it can be printed.
+//Sends the current BST to an array for printing.
 void in_order_to_array(struct movieNode *root, struct movieNode *array[])
 {
 	if(root == NULL)
 	{	
 		return;
 	}
-	//printf("%d\n", index);
 	
 	in_order_to_array(root->left, array);
 	
@@ -202,12 +199,11 @@ void in_order_to_array(struct movieNode *root, struct movieNode *array[])
 	array[index]->yearReleased = malloc(strlen(root->yearReleased) + 1);
 	array[index]->yearReleased = root->yearReleased; 
 	index++;
-	//printf("%d\n", index);
 	
 	in_order_to_array(root->right, array);
 }
 
-//Sends the user's current catalog to an array in order.
+//Sends the user's current catalog to an array in order for printing and writing to file.
 void user_in_order_to_array(struct userMovieNode *root, struct userMovieNode *array[])
 {
 	if(root == NULL)
@@ -216,8 +212,7 @@ void user_in_order_to_array(struct userMovieNode *root, struct userMovieNode *ar
 	}
 	
 	user_in_order_to_array(root->left, array);
-	//if(root->title != NULL && root->title != "")
-	//{
+	
 	array[index]->title = malloc(strlen(root->title) + 1);
 	array[index]->title = root->title;
 	array[index]->genre = malloc(strlen(root->genre) + 1);
@@ -230,9 +225,7 @@ void user_in_order_to_array(struct userMovieNode *root, struct userMovieNode *ar
 	array[index]->type = root->type; 
 	array[index]->date = malloc(strlen(root->date) + 1);
 	array[index]->date = root->date; 
-	//}
 	index++;
-	//printf("%d\n", index);
 	
 	user_in_order_to_array(root->right, array);
 }
@@ -244,6 +237,7 @@ void zeroIndex()
 }
 
 //Search for a specific node.
+//TODO: delete, was used in testing
 void search(char* key, struct movieNode* leaf, Compare cmp)
 {
 	int res;
@@ -262,6 +256,7 @@ void search(char* key, struct movieNode* leaf, Compare cmp)
 }
 
 //search for nodes with a search term of the value of key. returns a BST of all nodes containing the key in their title.
+//TODO: 
 void search2(char* key, struct movieNode* leaf, Compare cmp, struct movieNode ** searchRoot)
 {
 	int res;
@@ -360,8 +355,10 @@ struct userMovieNode * minValueNode(struct userMovieNode* node)
 {
 	struct userMovieNode* current = node;
 	
-	while(current->left != NULL && current != NULL)
+	while(current->left != NULL)
+	{
 		current = current->left;
+	}
 	return current;
 }
 
@@ -378,61 +375,25 @@ struct userMovieNode* delete_userNode(struct userMovieNode* root, char* key, Com
 		root->right = delete_userNode(root->right, key, cmp);
 	else
 	{
-		if(root->left == NULL && root->right != NULL)
+		if(root->left == NULL)
 		{
+			mvprintw(0, 0, "got here 1");
+			getch(); 
 			struct userMovieNode *temp = root->right;
-			/* root->title = malloc(temp->title + 1);
-			root->title = temp->title;
-			root->genre = malloc(temp->genre + 1);
-			root->genre = temp->genre;
-			root->runningTime = malloc(temp->runningTime + 1);
-			root->runningTime = temp->runningTime;
-			root->yearReleased = malloc(temp->yearReleased + 1);
-			root->yearReleased = temp->yearReleased;
-			root->type = malloc(temp->type + 1);
-			root->type = temp->type;
-			root->date = malloc(temp->date + 1);
-			root->date = temp->date; */
-			
-			//root->left = NULL;
-			//if(temp->right != NULL)
-			//{
-			//	root->right = temp->right;
-			//}
-			//free(root);
 			return temp;
 		}
-		else if(root->right == NULL && root->left != NULL)
+		else if(root->right == NULL)
 		{
+			mvprintw(0, 0, "got here");
+			getch();
 			struct userMovieNode *temp = root->left;
-			/* root->title = malloc(temp->title + 1);
-			root->title = temp->title;
-			root->genre = malloc(temp->genre + 1);
-			root->genre = temp->genre;
-			root->runningTime = malloc(temp->runningTime + 1);
-			root->runningTime = temp->runningTime;
-			root->yearReleased = malloc(temp->yearReleased + 1);
-			root->yearReleased = temp->yearReleased;
-			root->type = malloc(temp->type + 1);
-			root->type = temp->type;
-			root->date = malloc(temp->date + 1);
-			root->date = temp->date; */
-			
-			/* root->right = NULL;
-			if(temp->left != NULL)
-			{
-				root->left = temp->left;
-			} */
-			//free(root);
 			return temp;
-		}
-		else if (root->left == NULL && root->right == NULL)
+		}/* else if (root->left == NULL && root->right == NULL)
 		{
 			root = NULL;
 			return root;
-		}
-		else
-		{
+		} */
+		
 			struct userMovieNode *temp = minValueNode(root->right);
 			root->title = malloc(temp->title + 1);
 			root->title = temp->title;
@@ -448,7 +409,7 @@ struct userMovieNode* delete_userNode(struct userMovieNode* root, char* key, Com
 			root->date = temp->date;
 			
 			root->right = delete_userNode(root->right, temp->title, (Compare)cmpStr);
-		}
+		
 	}
 	
 	return root;
@@ -461,6 +422,7 @@ int main()
     long fsize;
 	long fsize2;
 	
+	//open movie records file
     file = fopen("movie_records","r");
 	char * userFilename = malloc(30);
     if(file != NULL)
@@ -482,7 +444,7 @@ int main()
 		char ** runtimeMinutes = malloc(fsize*100*sizeof(char));
 		char ** genres = malloc(fsize*100*sizeof(char));
 
-        // print
+        // insert all records in movie_records into 
         char * file_content = (char*)malloc(fsize);
 		
 		struct movieNode *root = NULL;
@@ -537,12 +499,12 @@ int main()
 				rewind(file2);
 				
 				char * file_content2 = (char*)malloc(fsize2);
-				char * tTitle = malloc(100*sizeof(char));
-				char * tRunningTime = malloc(10*sizeof(char));
-				char * tYearReleased = malloc(5*sizeof(char));
-				char * tGenre = malloc(100*sizeof(char));
-				char * tType = malloc(10*sizeof(char));
-				char * tDate = malloc(64*sizeof(char));
+				char * tTitle = malloc(100 * sizeof(char));
+				char * tRunningTime = malloc(10 * sizeof(char));
+				char * tYearReleased = malloc(5 * sizeof(char));
+				char * tGenre = malloc(100 * sizeof(char));
+				char * tType = malloc(10 * sizeof(char));
+				char * tDate = malloc(64 * sizeof(char));
 				
 				userRoot = NULL;
 				int i = 0;
@@ -552,10 +514,12 @@ int main()
 					if(file_content2[0] != '\0' && file_content2[0] != '\t' && file_content2[0] != '\n' && file_content2[0] != '\r')
 						userInsert(tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate, &userRoot, (Compare)cmpStr);
 				}
+				mvprintw(yMax-1, 0, "Loading %s's catalog.", userFilename);
+				getch();
 			}
 			else 
 			{
-				mvprintw(yMax-1, 0, "The file is null.");
+				mvprintw(yMax-1, 0, "Catalog not found, opening new catalog.");
 				getch();
 			}
 		}
@@ -1005,6 +969,14 @@ int main()
 				
 				int userBSTsize = userSize(userRoot);
 				
+				if(userBSTsize == 0)
+				{
+					mvprintw(yMax/2, (xMax/4), "Error: User catalog currently has no records to update.");
+					getch();
+					endwin();
+					exit(1);
+				}
+				
 				struct userMovieNode * array[userBSTsize];
 				
 				for(int i = 0; i < userBSTsize; i++)
@@ -1165,11 +1137,8 @@ int main()
 					updatedNode->date = malloc(array[printHighlight]->date + 1);
 					updatedNode->date = array[printHighlight]->date; 
 					
-					//char * recordToAdd = (char*)malloc(300 * sizeof(char));
-					delete_userNode(userRoot, updatedNode->title, (Compare)cmpStr);
-					/*user_in_order(userRoot);
-					getch();*/
-					//zeroIndex();
+					userRoot = delete_userNode(userRoot, updatedNode->title, (Compare)cmpStr);
+					
 					userInsert(updatedNode->title, updatedNode->genre, updatedNode->runningTime, updatedNode->yearReleased, updatedNode->type, updatedNode->date, &userRoot, (Compare)cmpStr);
 					mvprintw(yMax-1, xBeg, "Added %s (%s) to %s's catalog", updatedNode->title, updatedNode->type, userFilename);
 					getch();
@@ -1188,8 +1157,6 @@ int main()
 					while(!dateExitCond)
 					{	
 						mvwprintw(printwin, 0, 1, "Type in a date of format: DoW Mth DD Hr:Mn:Sc YYYY");
-						/* if(array[printHighlight]->date[strlen(array[printHighlight]->date) - 1] == '\n')
-							array[printHighlight]->date[strlen(array[printHighlight]->date) - 1] = '\0'; */
 						mvwprintw(printwin, 1, 1, "%s | ", array[printHighlight]->title);
 						echo();
 						wgetstr(printwin, dateStr);
@@ -1218,7 +1185,7 @@ int main()
 					updatedNode->date = malloc(dateStr + 1);
 					updatedNode->date = dateStr; 
 					
-					delete_userNode(userRoot, updatedNode->title, (Compare)cmpStr);
+					userRoot = delete_userNode(userRoot, updatedNode->title, (Compare)cmpStr);
 					
 					userInsert(updatedNode->title, updatedNode->genre, updatedNode->runningTime, updatedNode->yearReleased, updatedNode->type, updatedNode->date, &userRoot, (Compare)cmpStr);
 					mvprintw(yMax-1, xBeg, "Added %s (%s) to %s's catalog", updatedNode->title, updatedNode->date, userFilename);
@@ -1236,6 +1203,93 @@ int main()
 				zeroIndex();
 				wrefresh(printwin);
 			}	
+			else if(choices[highlight] == "Delete - Delete a movie from your catalog")
+			{
+				wborder(menuwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
+				wclear(menuwin);
+				wrefresh(menuwin);
+				delwin(menuwin);
+				erase();
+				
+				attron(COLOR_PAIR(1));
+				mvprintw(yBeg + 2, (xMax/4), "Internet Movie Database - Delete from Catalog\n\n");
+				attroff(COLOR_PAIR(1));
+				
+				refresh();
+				
+				WINDOW * deletewin = newwin(yMax/1.5, xMax, yMax/4, xBeg+(xMax/16));
+				wborder(deletewin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+				
+				wrefresh(deletewin);
+				
+				keypad(deletewin, true);
+				
+				int userBSTsize = userSize(userRoot);
+				
+				if(userBSTsize == 0)
+				{
+					mvprintw(yMax/2, (xMax/4), "Error: User catalog currently has no records to delete.");
+					getch();
+					endwin();
+					exit(1);
+				}
+				
+				struct userMovieNode * array[userBSTsize];
+				
+				for(int i = 0; i < userBSTsize; i++)
+				{
+					array[i] = (struct userMovieNode*)malloc(sizeof(struct userMovieNode));
+				} 
+				
+				user_in_order_to_array(userRoot, array);
+				int deleteChoice;
+				int deleteHighlight = 0;
+				
+				while(1)
+				{
+					for(int i = 0; i < userBSTsize; i++)
+					{
+						if(i==deleteHighlight)
+							wattron(deletewin, A_REVERSE);
+						mvwprintw(deletewin, i+1, 1, "%s | %s | %s", array[i]->title, array[i]->type, array[i]->date);
+						wattroff(deletewin, A_REVERSE);
+					}
+					deleteChoice = wgetch(deletewin);
+					
+					switch(deleteChoice)
+					{
+						case KEY_UP:
+							deleteHighlight--;
+							if(deleteHighlight < 0)
+								deleteHighlight = 0;
+							break;
+						case KEY_DOWN:
+							deleteHighlight++;
+							if(deleteHighlight == userBSTsize)
+								deleteHighlight = userBSTsize - 1;
+							break;
+						default:
+							break;
+					}
+					
+					if(deleteChoice == 10)
+						break;
+				} 
+				
+				userRoot = delete_userNode(userRoot, array[deleteHighlight]->title, (Compare)cmpStr);
+				mvprintw(yMax-1, xBeg, "Deleted %s from %s's catalog", array[deleteHighlight]->title, userFilename);
+				getch();
+				
+				wborder(deletewin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
+				wclear(deletewin);
+				wrefresh(deletewin);
+				delwin(deletewin);
+				erase();
+				endwin();
+				
+				zeroIndex();
+				wrefresh(deletewin);
+			}
 		}
 		
 		
