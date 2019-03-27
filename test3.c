@@ -340,6 +340,102 @@ void delete_tree(struct movieNode** leaf)
 	}
 }
 
+struct userMovieNode * minValueNode(struct userMovieNode* node)
+{
+	struct userMovieNode* current = node;
+	
+	while(current->left != NULL && current != NULL)
+		current = current->left;
+	return current;
+}
+
+struct userMovieNode* delete_userNode(struct userMovieNode* root, char* key, Compare cmp)
+{
+	if(root == NULL)
+		return root;
+	
+	int res;
+	res = cmp(key, root->title);
+	if(res < 0 && root->left != NULL)
+		root->left = delete_userNode(root->left, key, cmp);
+	else if(res > 0 && root->right != NULL)
+		root->right = delete_userNode(root->right, key, cmp);
+	else
+	{
+		if(root->left == NULL && root->right != NULL)
+		{
+			struct userMovieNode *temp = root->right;
+			root->title = malloc(temp->title + 1);
+			root->title = temp->title;
+			root->genre = malloc(temp->genre + 1);
+			root->genre = temp->genre;
+			root->runningTime = malloc(temp->runningTime + 1);
+			root->runningTime = temp->runningTime;
+			root->yearReleased = malloc(temp->yearReleased + 1);
+			root->yearReleased = temp->yearReleased;
+			root->type = malloc(temp->type + 1);
+			root->type = temp->type;
+			root->date = malloc(temp->date + 1);
+			root->date = temp->date;
+			
+			root->left = NULL;
+			if(temp->right != NULL)
+			{
+				root->right = temp->right;
+			}
+			
+			return root;
+		}
+		else if(root->right == NULL && root->left != NULL)
+		{
+			struct userMovieNode *temp = root->left;
+			root->title = malloc(temp->title + 1);
+			root->title = temp->title;
+			root->genre = malloc(temp->genre + 1);
+			root->genre = temp->genre;
+			root->runningTime = malloc(temp->runningTime + 1);
+			root->runningTime = temp->runningTime;
+			root->yearReleased = malloc(temp->yearReleased + 1);
+			root->yearReleased = temp->yearReleased;
+			root->type = malloc(temp->type + 1);
+			root->type = temp->type;
+			root->date = malloc(temp->date + 1);
+			root->date = temp->date;
+			
+			root->right = NULL;
+			if(temp->left != NULL)
+			{
+				root->left = temp->left;
+			}
+			
+			return temp;
+		}
+		
+		/* struct userMovieNode* temp = (struct userMovieNode*)malloc(sizeof(struct userMovieNode));
+		if(root->right != NULL)
+		{
+			temp = root->right;
+		}
+		else if(root->left != NULL)
+		{
+			temp = root->left;
+		} */
+		
+		root->title = "";
+		//root->title = temp->title;
+		root->genre = "";
+		root->runningTime = "";
+		root->yearReleased = "";
+		root->type = "";
+		root->date = "";
+		
+		//root->right = delete_userNode(root->right, temp->title, cmp);
+		//free(root);
+	}
+	
+	return root;
+}
+
 int main()
 {
     FILE * file;
@@ -554,12 +650,15 @@ int main()
 				{
 					if(userArray[i]->date[strlen(userArray[i]->date) - 1] == '\n')
 						userArray[i]->date[strlen(userArray[i]->date) - 1] = '\0';
-					sprintf(stringToAdd, "%s\t%s\t%s\t%s\t%s\t%s\n", userArray[i]->title, userArray[i]->runningTime, userArray[i]->yearReleased, userArray[i]->genre, userArray[i]->type, userArray[i]->date);
-					mvprintw(yBeg+i, 0, "%s", stringToAdd);
-					if(file2Null)
-						fputs(stringToAdd, file3);
-					else
-						fputs(stringToAdd, file2);
+					if(stringToAdd[0] != '\0' && stringToAdd[0] != '\t' && stringToAdd[0] != '\n' && stringToAdd[0] != '\r')
+					{
+						sprintf(stringToAdd, "%s\t%s\t%s\t%s\t%s\t%s\n", userArray[i]->title, userArray[i]->runningTime, userArray[i]->yearReleased, userArray[i]->genre, userArray[i]->type, userArray[i]->date);
+						mvprintw(yBeg+i, 0, "%s", stringToAdd);
+						if(file2Null)
+							fputs(stringToAdd, file3);
+						else
+							fputs(stringToAdd, file2);
+					}
 				} 
 				getch();
 				if(file2 != NULL)
@@ -840,7 +939,9 @@ int main()
 							}
 							
 							char * recordToAdd = (char*)malloc(150 * sizeof(char));
-							array[searchHighlight]->genre[strlen(array[searchHighlight]->genre) - 1] = '\0';
+							if(array[searchHighlight]->genre[strlen(array[searchHighlight]->genre) - 1] == '\n')
+								array[searchHighlight]->genre[strlen(array[searchHighlight]->genre) - 1] = '\0';
+							//array[searchHighlight]->genre[strlen(array[searchHighlight]->genre) - 1] = '\0';
 							
 							userInsert(array[searchHighlight]->title, array[searchHighlight]->genre, array[searchHighlight]->runningTime, array[searchHighlight]->yearReleased, mediaType, date, &userRoot, (Compare)cmpStr);
 							mvprintw(yMax-1, xBeg, "Added %s to %s's catalog", array[searchHighlight]->title, userFilename);
@@ -885,8 +986,6 @@ int main()
 				keypad(printwin, true);
 				
 				int userBSTsize = userSize(userRoot);
-				
-				
 				
 				struct userMovieNode * array[(userBSTsize)];
 				
@@ -980,13 +1079,17 @@ int main()
 						break;
 					wrefresh(printwin);
 				}
-				
+				erase();
 				int updateChoiceHighlight = 0;
 				if(updateChoices[updateHighlight] == "Update Type")
 				{
+					wclear(printwin);
+					wrefresh(printwin);
 					while(1)
 					{
-						mvwprintw(printwin, 1, 1, "%s", array[updateHighlight]->title);
+						wborder(printwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+						wrefresh(printwin);
+						mvwprintw(printwin, 1, 1, "%s | %s", array[printHighlight]->title, array[printHighlight]->type);
 						
 						for(int i = 0; i < 3; i++)
 						{
@@ -1018,29 +1121,39 @@ int main()
 						wrefresh(printwin);
 					}
 					
-					if(typeChoices[updateHighlight] == "DVD")
+					if(typeChoices[updateChoiceHighlight] == "DVD")
 					{
 						mediaType = "DVD";
 					}
-					else if(typeChoices[updateHighlight] == "BluRay")
+					else if(typeChoices[updateChoiceHighlight] == "BluRay")
 					{
 						mediaType = "BluRay";
 					}
-					else if(typeChoices[updateHighlight] == "Digital")
+					else if(typeChoices[updateChoiceHighlight] == "Digital")
 					{
 						mediaType = "Digital";
 					}
+					
+					struct userMovieNode * updatedNode = malloc((struct userMovieNode*)sizeof(struct userMovieNode));
+					updatedNode->title = malloc(array[printHighlight]->title + 1);
+					updatedNode->title = array[printHighlight]->title;
+					updatedNode->genre = malloc(array[printHighlight]->genre + 1);
+					updatedNode->genre = array[printHighlight]->genre;
+					updatedNode->runningTime = malloc(array[printHighlight]->runningTime + 1);
+					updatedNode->runningTime = array[printHighlight]->runningTime;
+					updatedNode->yearReleased = malloc(array[printHighlight]->yearReleased + 1);
+					updatedNode->yearReleased = array[printHighlight]->yearReleased;
+					updatedNode->type = malloc(mediaType + 1);
+					updatedNode->type = mediaType;
+					updatedNode->date = malloc(array[printHighlight]->date + 1);
+					updatedNode->date = array[printHighlight]->date; 
+					
+					char * recordToAdd = (char*)malloc(150 * sizeof(char));
+					delete_userNode(userRoot, array[printHighlight]->title, (Compare)cmpStr);
+					
+					userInsert(updatedNode->title, updatedNode->genre, updatedNode->runningTime, updatedNode->yearReleased, updatedNode->type, updatedNode->date, &userRoot, (Compare)cmpStr);
+					mvprintw(yMax-1, xBeg, "Added %s (%s) to %s's catalog", updatedNode->title, updatedNode->type, userFilename);
 				}
-				
-				
-				
-				
-				char * recordToAdd = (char*)malloc(150 * sizeof(char));
-				array[updateHighlight]->genre[strlen(array[updateHighlight]->genre) - 1] = '\0';
-				
-				userInsert(array[updateHighlight]->title, array[updateHighlight]->genre, array[updateHighlight]->runningTime, array[updateHighlight]->yearReleased, mediaType, date, &userRoot, (Compare)cmpStr);
-				mvprintw(yMax-1, xBeg, "Added %s to %s's catalog", array[updateHighlight]->title, userFilename);
-				
 				
 				getch();
 				wborder(printwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
