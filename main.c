@@ -414,7 +414,7 @@ int main()
 	
 	//open movie records file
     file = fopen("movie_records","r");
-	char * userFilename = malloc(30);
+	char * userFilename = malloc(30 * sizeof(char));
     if(file != NULL)
 	{
 
@@ -615,8 +615,6 @@ int main()
 				mvprintw(yMax-1, 0, "%d", userArraySize);
 				user_in_order_to_array(userRoot, userArray);  
 				
-				getch();
-				
 				char * stringToAdd = (char*)malloc(500 * sizeof(char));
 				
 				for(int i = 0; i < userArraySize; i++)
@@ -662,7 +660,7 @@ int main()
 				keypad(searchwin, true);
 			
 				char * searchMenu[] = {"Type a movie name to search... "};
-				char * searchChoice = malloc(200);			
+				char * searchChoice = malloc(200 * sizeof(char));			
 				
 				bool exitCond = false;
 				
@@ -735,9 +733,6 @@ int main()
 						
 						int choice2;
 						bool exitSearch = false;
-						
-						mvprintw(yMax-1, xBeg, "searchBSTsize = %d, array[0] = %s", searchBSTsize, array[0]->title);
-						getch();
 						
 						while(1)
 						{
