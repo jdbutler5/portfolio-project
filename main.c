@@ -78,6 +78,8 @@ void insert(char* key, char * genres, char * runningTimeMinutes, char * startYea
 			insert(key, genres, runningTimeMinutes, startYear, &(*leaf)->left, cmp);
 		else if(res > 0)
 			insert(key, genres, runningTimeMinutes, startYear, &(*leaf)->right, cmp);
+		else if(res == 0)
+			insert(key, genres, runningTimeMinutes, startYear, &(*leaf)->right, cmp);
 	}
 }
 
@@ -114,6 +116,8 @@ void userInsert(char* key, char * genres, char * runningTimeMinutes, char * star
 		if(res < 0)
 			userInsert(key, genres, runningTimeMinutes, startYear, mediaType, dateEntered, &(*leaf)->left, cmp);
 		else if(res > 0)
+			userInsert(key, genres, runningTimeMinutes, startYear, mediaType, dateEntered, &(*leaf)->right, cmp);
+		else if(res == 0)
 			userInsert(key, genres, runningTimeMinutes, startYear, mediaType, dateEntered, &(*leaf)->right, cmp);
 	}
 }
@@ -326,6 +330,7 @@ void search2(char* key, struct movieNode* leaf, Compare cmp, struct movieNode **
 		}
 		else
 		{
+			search2(key, leaf->right, cmp, &(*searchRoot));
 			insert(leaf->title, leaf->genre, leaf->runningTime, leaf->yearReleased, &(*searchRoot), (Compare)cmpStr);
 		}
 	}
@@ -362,29 +367,41 @@ struct userMovieNode * minValueNode(struct userMovieNode* node)
 }
 
 //Deletes a user movie node with the specified title.
-struct userMovieNode* delete_userNode(struct userMovieNode* root, char* key, Compare cmp)
+struct userMovieNode* delete_userNode(struct userMovieNode* root, char* key, char * year, Compare cmp)
 {
 	if(root == NULL)
 		return root;
 	
 	int res;
+	int yearRes;
 	res = cmp(key, root->title);
+	yearRes = cmp(year, root->yearReleased);
 	if(res < 0 && root->left != NULL)
-		root->left = delete_userNode(root->left, key, cmp);
+		root->left = delete_userNode(root->left, key, year, cmp);
 	else if(res > 0 && root->right != NULL)
-		root->right = delete_userNode(root->right, key, cmp);
+		root->right = delete_userNode(root->right, key, year, cmp);
 	else
 	{
-		if(root->left == NULL)
+		if(yearRes < 0 && root->right != NULL)
 		{
-			struct userMovieNode *temp = root->right;
-			return temp;
+			root->right = delete_userNode(root->right, key, year, cmp);
 		}
-		else if(root->right == NULL)
+		else if(yearRes > 0 && root->right != NULL)
 		{
-			struct userMovieNode *temp = root->left;
-			return temp;
+			root->right = delete_userNode(root->right, key, year, cmp);
 		}
+		else
+		{
+			if(root->left == NULL)
+			{
+				struct userMovieNode *temp = root->right;
+				return temp;
+			}
+			else if(root->right == NULL)
+			{
+				struct userMovieNode *temp = root->left;
+				return temp;
+			}
 		
 			struct userMovieNode *temp = minValueNode(root->right);
 			root->title = malloc(temp->title + 1);
@@ -400,7 +417,8 @@ struct userMovieNode* delete_userNode(struct userMovieNode* root, char* key, Com
 			root->date = malloc(temp->date + 1);
 			root->date = temp->date;
 			
-			root->right = delete_userNode(root->right, temp->title, (Compare)cmpStr);
+			root->right = delete_userNode(root->right, temp->title, temp->yearReleased, (Compare)cmpStr);
+		}
 	}
 	return root;
 }
@@ -1107,7 +1125,7 @@ int main()
 					updatedNode->date = malloc(array[printHighlight]->date + 1);
 					updatedNode->date = array[printHighlight]->date; 
 					
-					userRoot = delete_userNode(userRoot, updatedNode->title, (Compare)cmpStr);
+					userRoot = delete_userNode(userRoot, updatedNode->title, updatedNode->yearReleased, (Compare)cmpStr);
 					
 					userInsert(updatedNode->title, updatedNode->genre, updatedNode->runningTime, updatedNode->yearReleased, updatedNode->type, updatedNode->date, &userRoot, (Compare)cmpStr);
 					mvprintw(yMax-1, xBeg, "Added %s (%s) to %s's catalog", updatedNode->title, updatedNode->type, userFilename);
@@ -1155,7 +1173,7 @@ int main()
 					updatedNode->date = malloc(dateStr + 1);
 					updatedNode->date = dateStr; 
 					
-					userRoot = delete_userNode(userRoot, updatedNode->title, (Compare)cmpStr);
+					userRoot = delete_userNode(userRoot, updatedNode->title, updatedNode->yearReleased, (Compare)cmpStr);
 					
 					userInsert(updatedNode->title, updatedNode->genre, updatedNode->runningTime, updatedNode->yearReleased, updatedNode->type, updatedNode->date, &userRoot, (Compare)cmpStr);
 					mvprintw(yMax-1, xBeg, "Added %s (%s) to %s's catalog", updatedNode->title, updatedNode->date, userFilename);
@@ -1245,7 +1263,7 @@ int main()
 						break;
 				} 
 				
-				userRoot = delete_userNode(userRoot, array[deleteHighlight]->title, (Compare)cmpStr);
+				userRoot = delete_userNode(userRoot, array[deleteHighlight]->title, array[deleteHighlight]->yearReleased, (Compare)cmpStr);
 				mvprintw(yMax-1, xBeg, "Deleted %s from %s's catalog", array[deleteHighlight]->title, userFilename);
 				getch();
 				
