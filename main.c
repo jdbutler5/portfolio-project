@@ -34,16 +34,25 @@ struct userMovieNode
 //Comparison typedef.
 typedef int (*Compare) (const char *, const char *);
 
+bool startsWith(const char *pre, const char *str)
+{
+	size_t lenpre = strlen(pre),
+		lenstr = strlen(str);
+	return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
+}
+
 //Function for inserting into the binary search tree.
 void insert(char* key, char * genres, char * runningTimeMinutes, char * startYear, struct movieNode** leaf, Compare cmp)
 {
 	int res;
+	int yearRes;
 	if (*leaf == NULL)
 	{
 		*leaf = (struct movieNode*)malloc(sizeof(struct movieNode));
+		
 		(*leaf)->title = malloc(strlen (key) + 1);
 		strcpy((*leaf)->title, key);
-		
+
 		(*leaf)->genre = malloc(strlen (genres) + 1);
 		strcpy((*leaf)->genre, genres);
 		
@@ -63,7 +72,17 @@ void insert(char* key, char * genres, char * runningTimeMinutes, char * startYea
 		else if(res > 0)
 			insert(key, genres, runningTimeMinutes, startYear, &(*leaf)->right, cmp);
 		else if(res == 0)
-			insert(key, genres, runningTimeMinutes, startYear, &(*leaf)->right, cmp);
+		{
+			yearRes = cmp(startYear, (*leaf)->yearReleased);
+			if(yearRes > 0)
+			{
+				insert(key, genres, runningTimeMinutes, startYear, &(*leaf)->right, cmp);
+			}
+			else if(yearRes < 0)
+			{
+				insert(key, genres, runningTimeMinutes, startYear, &(*leaf)->right, cmp);
+			}
+		}
 	}
 }
 
@@ -71,6 +90,7 @@ void insert(char* key, char * genres, char * runningTimeMinutes, char * startYea
 void userInsert(char* key, char * genres, char * runningTimeMinutes, char * startYear, char * mediaType, char * dateEntered, struct userMovieNode** leaf, Compare cmp)
 {
 	int res;
+	int yearRes;
 	if (*leaf == NULL)
 	{
 		*leaf = (struct userMovieNode*)malloc(sizeof(struct userMovieNode));
@@ -97,12 +117,22 @@ void userInsert(char* key, char * genres, char * runningTimeMinutes, char * star
 	else
 	{
 		res = cmp(key, (*leaf)->title);
+		yearRes = cmp(startYear, (*leaf)->yearReleased);
 		if(res < 0)
 			userInsert(key, genres, runningTimeMinutes, startYear, mediaType, dateEntered, &(*leaf)->left, cmp);
 		else if(res > 0)
 			userInsert(key, genres, runningTimeMinutes, startYear, mediaType, dateEntered, &(*leaf)->right, cmp);
 		else if(res == 0)
-			userInsert(key, genres, runningTimeMinutes, startYear, mediaType, dateEntered, &(*leaf)->right, cmp);
+		{
+			if(yearRes > 0)
+			{
+				userInsert(key, genres, runningTimeMinutes, startYear, mediaType, dateEntered, &(*leaf)->right, cmp);
+			}
+			else if(yearRes < 0)
+			{
+				userInsert(key, genres, runningTimeMinutes, startYear, mediaType, dateEntered, &(*leaf)->right, cmp);
+			}
+		}
 	}
 }
 
@@ -111,6 +141,55 @@ int cmpStr(const char *a, const char *b)
 {
 	return (strcmp(a,b));
 }
+
+/* int cmpSearchStr(const char *a, const char *b)
+{
+	mvprintw(0, 0, "a = %s", a);
+	getch();
+	mvprintw(0, 0, "b = %s", b);
+	getch();
+	if(startsWith("The ", b))
+	{
+		char newTitle[strlen(b)-4]; 
+		//strncpy(newTitle, b + 4, strlen(newTitle));
+		for(int i = 0; i < strlen(b); i++)
+		{
+			newTitle[i] = b[4+i];
+		}
+		
+		if(strlen(a) != strlen(newTitle))
+		{
+			mvprintw(1, 0, "got here");
+			getch();
+			if(startsWith(a, newTitle))
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			return (strcmp(a, newTitle));
+		}			
+		
+		mvprintw(0, 0, "%s %s %d", newTitle, a, strlen(b));
+		getch();
+		//return (strcmp(a, newTitle));
+	}
+	else if (!startsWith("The ", a))
+	{
+		char newKey[strlen(a)+4]; 
+		strncpy(newKey, "The ", 4);
+		for(int i = 0; i < strlen(a); i++)
+		{
+			newKey[4+i] = a[i];
+		}
+		mvprintw(3, 0, "%s", newKey);
+		getch();
+		return strcmp(newKey, b);
+	}
+	
+	return (strcmp(a,b));
+} */
 
 //Returns the size of a movie node tree.
 int size(struct movieNode* node)
@@ -196,8 +275,7 @@ void zeroIndex()
 	index = 0;
 }
 
-//search for nodes with a search term of the value of key. returns a BST of all nodes containing the key in their title.
-//TODO: rename, search2 is not a good algorithm name
+//search for nodes with a search term of the value of key. returns a BST of all nodes containing the key in their title. 
 void search(char* key, struct movieNode* leaf, Compare cmp, struct movieNode ** searchRoot)
 {
 	int res;
@@ -206,11 +284,26 @@ void search(char* key, struct movieNode* leaf, Compare cmp, struct movieNode ** 
 	
 	if(leaf != NULL)
 	{
-		res = cmp(key, leaf->title);
+		res = cmpStr(key, leaf->title);
+		if(startsWith(key, leaf->title))
+		{
+			//search(key, leaf->left, cmp, &(*searchRoot));
+			insert(leaf->title, leaf->genre, leaf->runningTime, leaf->yearReleased, &(*searchRoot), (Compare)cmpStr);
+			search(key, leaf->right, cmp, &(*searchRoot));
+		}
+		/* else if(startsWith("The ", leaf->title))
+		{
+			char newTitle[strlen(key)+4];
+			newTitle[0] = '\0';
+			strcat(newTitle, "The ");
+			strcat(newTitle, key);
+			search(newTitle, &(*searchRoot), cmp, &(*searchRoot));
+		} */
+		
 		if(res < 0)
 		{
-			//If the search key doesn't match exactly, see if any entries in the left leaf contain a part of the search string
-			p = strstr(leaf->title, key);
+			
+			/* p = strstr(leaf->title, key);
 			if(p != NULL)
 			{
 				//If they do, add it to the searchRoot mini-BST
@@ -233,14 +326,14 @@ void search(char* key, struct movieNode* leaf, Compare cmp, struct movieNode ** 
 				}
 				else
 					insert(leaf->title, leaf->genre, leaf->runningTime, leaf->yearReleased, &(*searchRoot), (Compare)cmpStr);
-			}
-			//if not, continue searching down the node's leaves
+			} */
+			
 			search(key, leaf->left, cmp, &(*searchRoot));
-			search(key, leaf->right, cmp, &(*searchRoot));
+			//search(key, leaf->right, cmp, &(*searchRoot));
 		}
 		else if(res > 0)
 		{
-			k = strstr(leaf->title, key);
+			/* k = strstr(leaf->title, key);
 			if(k != NULL)
 			{
 				if (*searchRoot == NULL){
@@ -261,13 +354,14 @@ void search(char* key, struct movieNode* leaf, Compare cmp, struct movieNode ** 
 				}
 				else
 					insert(leaf->title, leaf->genre, leaf->runningTime, leaf->yearReleased, &(*searchRoot), (Compare)cmpStr);
-			}
-			search(key, leaf->left, cmp, &(*searchRoot));
+			} */
+			
+			//search(key, leaf->left, cmp, &(*searchRoot));
 			search(key, leaf->right, cmp, &(*searchRoot));
 		}
 		else
 		{
-			search(key, leaf->right, cmp, &(*searchRoot));
+			//search(key, leaf->right, cmp, &(*searchRoot));
 			insert(leaf->title, leaf->genre, leaf->runningTime, leaf->yearReleased, &(*searchRoot), (Compare)cmpStr);
 		}
 	}
@@ -315,16 +409,21 @@ struct userMovieNode* delete_userNode(struct userMovieNode* root, char* key, cha
 		}
 		else
 		{
-			if(typeRes < 0 && root->right != NULL)
+			/* if(typeRes < 0 && root->right != NULL)
 			{
 				root->right = delete_userNode(root->right, key, year, mediaType, cmp);
 			}
 			else if(typeRes > 0 && root->right != NULL)
 			{
 				root->right = delete_userNode(root->right, key, year, mediaType, cmp);
-			}
-			else
+			} */
+			/* else if(typeRes == 0 && root->right != NULL)
 			{
+				struct userMovieNode *temp = root->right;
+				return temp;
+			} */
+			//else
+			//{
 				if(root->left == NULL)
 				{
 					struct userMovieNode *temp = root->right;
@@ -351,7 +450,7 @@ struct userMovieNode* delete_userNode(struct userMovieNode* root, char* key, cha
 				root->date = temp->date;
 				
 				root->right = delete_userNode(root->right, temp->title, temp->yearReleased, temp->type, (Compare)cmpStr);
-			}
+			//}
 		}
 	}
 	return root;
@@ -630,7 +729,27 @@ int main()
 				{
 					noecho();
 					struct movieNode** searchRoot = NULL;
+					char searchKey[strlen(searchChoice)];
+					
 					search(searchChoice, root, (Compare)cmpStr, &searchRoot);
+					
+					searchKey[0] = '\0';
+					strcat(searchKey, "The ");
+					strcat(searchKey, searchChoice);
+					
+					search(searchKey, root, (Compare)cmpStr, &searchRoot);
+					
+					searchKey[0] = '\0';
+					strcat(searchKey, "A ");
+					strcat(searchKey, searchChoice);
+					
+					search(searchKey, root, (Compare)cmpStr, &searchRoot);
+					
+					searchKey[0] = '\0';
+					strcat(searchKey, "And ");
+					strcat(searchKey, searchChoice);
+					
+					search(searchKey, root, (Compare)cmpStr, &searchRoot);
 					
 					int searchBSTsize = size(searchRoot);
 					
@@ -683,6 +802,7 @@ int main()
 						{
 							wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
 							wrefresh(searchwin);
+							
 							int i = 0; 
 							int arrayCounter = 0;
 							if(searchBSTsize < numRecordsToPrint)
@@ -694,6 +814,8 @@ int main()
 								arrayCounter = numRecordsToPrint;
 							}
 							
+							mvwprintw(searchwin, arrayCounter+5, 1, "%d results, scroll with arrow keys to see more results...", searchBSTsize);
+							
 							for(i = 0; i < arrayCounter; i++)
 							{
 								mvwprintw(searchwin, 1, 1, "%s%s", (char *)searchMenu[0], searchChoice);
@@ -703,7 +825,6 @@ int main()
 								mvwprintw(searchwin, i+2, 1, "%s", searchChoices[i+printStart]);
 								wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
 								wattroff(searchwin, A_REVERSE);
-								mvwprintw(searchwin, i+3, 1, "%d results, scroll with arrow keys to see more results...", searchBSTsize);
 								wrefresh(searchwin);
 							}
 							
@@ -741,8 +862,7 @@ int main()
 											else if(searchHighlight >= searchBSTsize)
 											{
 												searchHighlight = searchBSTsize - 1;
-											}												
-											//break;
+											}
 										}
 									}
 									else
@@ -883,37 +1003,97 @@ int main()
 					user_in_order_to_array(userRoot, array);
 					int printChoice;
 					int printHighlight = 0;
+					int printStart = 0;
+					int numRecordsToPrint = 10;
+					
+					if(yMax < 24)
+					{
+						numRecordsToPrint = 5;
+					}
+					
+					bool tooManyRecords = false;
+					if(userBSTsize > numRecordsToPrint)
+					{
+						tooManyRecords = true;
+					}
 					
 					while(1)
 					{
-						for(int i = 0; i < userBSTsize; i++)
+						int i = 0; 
+						int arrayCounter = 0;
+						if(userBSTsize < numRecordsToPrint)
 						{
-							if(i==printHighlight)
-								wattron(printwin, A_REVERSE);
-							mvwprintw(printwin, i+1, 1, "%s | %s mins | %s | %s | %s | %s", array[i]->title, array[i]->runningTime, array[i]->genre, array[i]->yearReleased, array[i]->type, array[i]->date);
-							wattroff(printwin, A_REVERSE);
+							arrayCounter = userBSTsize;
 						}
+						else 
+						{
+							arrayCounter = numRecordsToPrint;
+						}
+						
+						mvwprintw(printwin, arrayCounter+5, 1, "%d movies in catalog, scroll with arrow keys to see more results...", userBSTsize);
+						
+						for(i = 0; i < arrayCounter; i++)
+						{
+							if(i + printStart==printHighlight)
+								wattron(printwin, A_REVERSE);
+							mvwprintw(printwin, i+2, 1, "%s | %s mins | %s | %s | %s | %s", array[i+printStart]->title, array[i+printStart]->runningTime, array[i+printStart]->yearReleased, array[i+printStart]->genre, array[i+printStart]->type, array[i+printStart]->date);
+							wborder(printwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+							wattroff(printwin, A_REVERSE);
+							wrefresh(printwin);
+						}
+						
 						printChoice = wgetch(printwin);
 						
 						switch(printChoice)
 						{
 							case KEY_UP:
 								printHighlight--;
-								if(printHighlight < 0)
-									printHighlight = 0;
+								if(printHighlight <= -1)
+								{
+									printHighlight = 0;						
+								}
+								if(tooManyRecords)
+								{
+									if(printHighlight > 0 && printStart > 0 && printHighlight == printStart)
+									{
+										printStart = printStart - 1;
+										wclear(printwin);
+									}
+								}
 								break;
 							case KEY_DOWN:
 								printHighlight++;
-								if(printHighlight == userBSTsize)
-									printHighlight = userBSTsize - 1;
+								if(tooManyRecords)
+								{
+									if(printHighlight >= arrayCounter && printHighlight ==  i + printStart)
+									{
+										
+										if(printHighlight < userBSTsize && i + printStart < userBSTsize)
+										{
+											printStart = printStart + 1;
+											wclear(printwin);
+										}
+										else if(printHighlight >= userBSTsize)
+										{
+											printHighlight = userBSTsize - 1;
+											wclear(printwin);
+										}
+									}
+								}
+								else
+								{
+									if(printHighlight >= userBSTsize)
+										printHighlight = userBSTsize - 1;
+								}
+								
 								break;
 							default:
 								break;
 						}
 						
-						if(printChoice == 10)
-							break;
-					} 
+							if(printChoice == 10)
+								break;
+						}
 					
 					char * typeChoices[] = {"DVD", "BluRay", "Digital"};
 					char * updateChoices[] = {"Update Type", "Update Time"};
@@ -1138,36 +1318,96 @@ int main()
 					int deleteChoice;
 					int deleteHighlight = 0;
 					
+					int printStart = 0;
+					int numRecordsToPrint = 10;
+					if(yMax < 24)
+					{
+						numRecordsToPrint = 5;
+					}
+					
+					bool tooManyRecords = false;
+					if(userBSTsize > numRecordsToPrint)
+					{
+						tooManyRecords = true;
+					}
+					
 					while(1)
 					{
-						for(int i = 0; i < userBSTsize; i++)
+						int i = 0; 
+						int arrayCounter = 0;
+						if(userBSTsize < numRecordsToPrint)
 						{
-							if(i==deleteHighlight)
-								wattron(deletewin, A_REVERSE);
-							mvwprintw(deletewin, i+1, 1, "%s | %s | %s", array[i]->title, array[i]->type, array[i]->date);
-							wattroff(deletewin, A_REVERSE);
+							arrayCounter = userBSTsize;
 						}
+						else 
+						{
+							arrayCounter = numRecordsToPrint;
+						}
+						
+						mvwprintw(deletewin, arrayCounter+5, 1, "%d movies in catalog, scroll with arrow keys to see more results...", userBSTsize);
+						
+						for(i = 0; i < arrayCounter; i++)
+						{
+							if(i + printStart==deleteHighlight)
+								wattron(deletewin, A_REVERSE);
+							mvwprintw(deletewin, i+2, 1, "%s | %s mins | %s | %s | %s | %s", array[i+printStart]->title, array[i+printStart]->runningTime, array[i+printStart]->yearReleased, array[i+printStart]->genre, array[i+printStart]->type, array[i+printStart]->date);
+							wborder(deletewin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
+							wattroff(deletewin, A_REVERSE);
+							wrefresh(deletewin);
+						}
+						
 						deleteChoice = wgetch(deletewin);
 						
 						switch(deleteChoice)
 						{
 							case KEY_UP:
 								deleteHighlight--;
-								if(deleteHighlight < 0)
-									deleteHighlight = 0;
+								if(deleteHighlight <= -1)
+								{
+									deleteHighlight = 0;						
+								}
+								if(tooManyRecords)
+								{
+									if(deleteHighlight > 0 && printStart > 0 && deleteHighlight == printStart)
+									{
+										printStart = printStart - 1;
+										wclear(deletewin);
+									}
+								}
 								break;
 							case KEY_DOWN:
 								deleteHighlight++;
-								if(deleteHighlight == userBSTsize)
-									deleteHighlight = userBSTsize - 1;
+								if(tooManyRecords)
+								{
+									if(deleteHighlight >= arrayCounter && deleteHighlight ==  i + printStart)
+									{
+										
+										if(deleteHighlight < userBSTsize && i + printStart < userBSTsize)
+										{
+											printStart = printStart + 1;
+											wclear(deletewin);
+										}
+										else if(deleteHighlight >= userBSTsize)
+										{
+											deleteHighlight = userBSTsize - 1;
+											wclear(deletewin);
+										}
+									}
+								}
+								else
+								{
+									if(deleteHighlight >= userBSTsize)
+										deleteHighlight = userBSTsize - 1;
+								}
+								
 								break;
 							default:
 								break;
 						}
 						
-						if(deleteChoice == 10)
-							break;
-					} 
+							if(deleteChoice == 10)
+								break;
+						}
 					//Deleting the node with matching title, year, and type (in case there are other movies with similar titles, or in the case of duplicates with different types)
 					userRoot = delete_userNode(userRoot, array[deleteHighlight]->title, array[deleteHighlight]->yearReleased, array[deleteHighlight]->type, (Compare)cmpStr);
 					mvprintw(yMax-1, xBeg, "Deleted %s from %s's catalog. [Press Enter to continue.]", array[deleteHighlight]->title, userFilename);
