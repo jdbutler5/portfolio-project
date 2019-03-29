@@ -1,5 +1,7 @@
 # portfolio-project
 
+# About the project
+
 Installing ncurses
 
 Getting movie file
