@@ -133,6 +133,14 @@ void userInsert(char* key, char * genres, char * runningTimeMinutes, char * star
 			{
 				userInsert(key, genres, runningTimeMinutes, startYear, mediaType, dateEntered, &(*leaf)->right, cmp);
 			}
+			else
+			{
+				int typeRes = cmp(mediaType, (*leaf)->type);
+				if(typeRes < 0 || typeRes > 0)
+				{
+					(*leaf)->type = mediaType;
+				}
+			}
 		}
 	}
 }
@@ -304,48 +312,32 @@ struct userMovieNode* delete_userNode(struct userMovieNode* root, char* key, cha
 		}
 		else
 		{
-			/* if(typeRes < 0 && root->right != NULL)
-			{
-				root->right = delete_userNode(root->right, key, year, mediaType, cmp);
-			}
-			else if(typeRes > 0 && root->right != NULL)
-			{
-				root->right = delete_userNode(root->right, key, year, mediaType, cmp);
-			} */
-			/* else if(typeRes == 0 && root->right != NULL)
+			if(root->left == NULL)
 			{
 				struct userMovieNode *temp = root->right;
 				return temp;
-			} */
-			//else
-			//{
-				if(root->left == NULL)
-				{
-					struct userMovieNode *temp = root->right;
-					return temp;
-				}
-				else if(root->right == NULL)
-				{
-					struct userMovieNode *temp = root->left;
-					return temp;
-				}
+			}
+			else if(root->right == NULL)
+			{
+				struct userMovieNode *temp = root->left;
+				return temp;
+			}
+		
+			struct userMovieNode *temp = minValueNode(root->right);
+			root->title = malloc(temp->title + 1);
+			root->title = temp->title;
+			root->genre = malloc(temp->genre + 1);
+			root->genre = temp->genre;
+			root->runningTime = malloc(temp->runningTime + 1);
+			root->runningTime = temp->runningTime;
+			root->yearReleased = malloc(temp->yearReleased + 1);
+			root->yearReleased = temp->yearReleased;
+			root->type = malloc(temp->type + 1);
+			root->type = temp->type;
+			root->date = malloc(temp->date + 1);
+			root->date = temp->date;
 			
-				struct userMovieNode *temp = minValueNode(root->right);
-				root->title = malloc(temp->title + 1);
-				root->title = temp->title;
-				root->genre = malloc(temp->genre + 1);
-				root->genre = temp->genre;
-				root->runningTime = malloc(temp->runningTime + 1);
-				root->runningTime = temp->runningTime;
-				root->yearReleased = malloc(temp->yearReleased + 1);
-				root->yearReleased = temp->yearReleased;
-				root->type = malloc(temp->type + 1);
-				root->type = temp->type;
-				root->date = malloc(temp->date + 1);
-				root->date = temp->date;
-				
-				root->right = delete_userNode(root->right, temp->title, temp->yearReleased, temp->type, (Compare)cmpStr);
-			//}
+			root->right = delete_userNode(root->right, temp->title, temp->yearReleased, temp->type, (Compare)cmpStr);
 		}
 	}
 	return root;
@@ -562,7 +554,8 @@ int main()
 					if(stringToAdd[0] != '\0' && stringToAdd[0] != '\t' && stringToAdd[0] != '\n' && stringToAdd[0] != '\r')
 					{
 						sprintf(stringToAdd, "%s\t%s\t%s\t%s\t%s\t%s\n", userArray[i]->title, userArray[i]->runningTime, userArray[i]->yearReleased, userArray[i]->genre, userArray[i]->type, userArray[i]->date);
-						mvprintw(yBeg+i, 0, "%s", stringToAdd);
+						//mvprintw(yBeg+i, 0, "%s", stringToAdd);
+						mvprintw(yMax-1, 0, "Wrote %s's catalog to file. [Press Enter to Exit...]", userFilename);
 						if(file2Null)
 							fputs(stringToAdd, file3);
 						else
@@ -781,7 +774,8 @@ int main()
 						time_t t = time(NULL);
 						struct tm *tm = localtime(&t);
 						char date[64];
-						strftime(date, sizeof(date), "%c", tm);
+						//strftime(date, sizeof(date), "%c", tm);
+						strftime(date, sizeof(date), "%m/%d/%Y", tm);
 						
 						wclear(searchwin);
 						wborder(searchwin, 0, 0, ' ', ' ', ' ', ' ', ' ', ' ');
@@ -987,9 +981,9 @@ int main()
 								break;
 						}
 						
-							if(printChoice == 10)
-								break;
-						}
+						if(printChoice == 10)
+							break;
+					}
 					
 					char * typeChoices[] = {"DVD", "BluRay", "Digital"};
 					char * updateChoices[] = {"Update Type", "Update Time"};
@@ -1127,16 +1121,21 @@ int main()
 			
 						while(!dateExitCond)
 						{	
-							mvwprintw(printwin, 0, 1, "Type in a date of format: DoW Mth DD Hr:Mn:Sc YYYY");
+							mvwprintw(printwin, 0, 1, "Type in a date of format: DD/MM/YYYY");
 							mvwprintw(printwin, 1, 1, "%s | ", array[printHighlight]->title);
 							echo();
-							wgetnstr(printwin, dateStr, 25);
+							wgetnstr(printwin, dateStr, 10);
 							dateExitCond = true;
 						}
 						
 						if(dateStr == NULL || strcmp(dateStr, "\n") == 0 || strcmp(dateStr, "") == 0 )
 						{
 							mvprintw(yMax/2 + 1, (xMax/4), "Error: You must type in a valid date. [Press Enter to continue.]");
+							getch();
+						}
+						else if(!isdigit(dateStr[0]) || !isdigit(dateStr[1]) || dateStr[2] != '/' || !isdigit(dateStr[3]) || !isdigit(dateStr[4]) || dateStr[5] != '/' || !isdigit(dateStr[6]) || !isdigit(dateStr[7]) || !isdigit(dateStr[8]) || !isdigit(dateStr[9]))
+						{
+							mvprintw(yMax/2 + 1, (xMax/4), "Error: Dates must be in the format DD/MM/YYYY. [Press Enter to continue.]");
 							getch();
 						}
 						else
@@ -1160,6 +1159,7 @@ int main()
 							userInsert(updatedNode->title, updatedNode->genre, updatedNode->runningTime, updatedNode->yearReleased, updatedNode->type, updatedNode->date, &userRoot, (Compare)cmpStr);
 							mvprintw(yMax-1, xBeg, "Added %s (%s) to %s's catalog", updatedNode->title, updatedNode->date, userFilename);
 							getch();
+							
 						}
 					}
 				}
