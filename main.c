@@ -42,6 +42,7 @@ bool startsWith(const char *pre, const char *str)
 }
 
 //Function for inserting into the binary search tree.
+//Code borrowed from https://www.geeksforgeeks.org/binary-search-tree-set-1-search-and-insertion/
 void insert(char* key, char * genres, char * runningTimeMinutes, char * startYear, struct movieNode** leaf, Compare cmp)
 {
 	int res;
@@ -142,56 +143,8 @@ int cmpStr(const char *a, const char *b)
 	return (strcmp(a,b));
 }
 
-/* int cmpSearchStr(const char *a, const char *b)
-{
-	mvprintw(0, 0, "a = %s", a);
-	getch();
-	mvprintw(0, 0, "b = %s", b);
-	getch();
-	if(startsWith("The ", b))
-	{
-		char newTitle[strlen(b)-4]; 
-		//strncpy(newTitle, b + 4, strlen(newTitle));
-		for(int i = 0; i < strlen(b); i++)
-		{
-			newTitle[i] = b[4+i];
-		}
-		
-		if(strlen(a) != strlen(newTitle))
-		{
-			mvprintw(1, 0, "got here");
-			getch();
-			if(startsWith(a, newTitle))
-			{
-				return 0;
-			}
-		}
-		else
-		{
-			return (strcmp(a, newTitle));
-		}			
-		
-		mvprintw(0, 0, "%s %s %d", newTitle, a, strlen(b));
-		getch();
-		//return (strcmp(a, newTitle));
-	}
-	else if (!startsWith("The ", a))
-	{
-		char newKey[strlen(a)+4]; 
-		strncpy(newKey, "The ", 4);
-		for(int i = 0; i < strlen(a); i++)
-		{
-			newKey[4+i] = a[i];
-		}
-		mvprintw(3, 0, "%s", newKey);
-		getch();
-		return strcmp(newKey, b);
-	}
-	
-	return (strcmp(a,b));
-} */
-
 //Returns the size of a movie node tree.
+//Code borrowed from https://www.geeksforgeeks.org/write-a-c-program-to-calculate-size-of-a-tree/
 int size(struct movieNode* node)
 {
 	int c = 1;
@@ -275,7 +228,8 @@ void zeroIndex()
 	index = 0;
 }
 
-//search for nodes with a search term of the value of key. returns a BST of all nodes containing the key in their title. 
+//search for nodes with a search term of the value of key. returns a BST of all nodes containing the key in their title.
+//Code borrowed from https://www.geeksforgeeks.org/binary-search-tree-set-1-search-and-insertion/ 
 void search(char* key, struct movieNode* leaf, Compare cmp, struct movieNode ** searchRoot)
 {
 	int res;
@@ -287,81 +241,20 @@ void search(char* key, struct movieNode* leaf, Compare cmp, struct movieNode ** 
 		res = cmpStr(key, leaf->title);
 		if(startsWith(key, leaf->title))
 		{
-			//search(key, leaf->left, cmp, &(*searchRoot));
 			insert(leaf->title, leaf->genre, leaf->runningTime, leaf->yearReleased, &(*searchRoot), (Compare)cmpStr);
 			search(key, leaf->right, cmp, &(*searchRoot));
 		}
-		/* else if(startsWith("The ", leaf->title))
-		{
-			char newTitle[strlen(key)+4];
-			newTitle[0] = '\0';
-			strcat(newTitle, "The ");
-			strcat(newTitle, key);
-			search(newTitle, &(*searchRoot), cmp, &(*searchRoot));
-		} */
 		
 		if(res < 0)
 		{
-			
-			/* p = strstr(leaf->title, key);
-			if(p != NULL)
-			{
-				//If they do, add it to the searchRoot mini-BST
-				if (*searchRoot == NULL)
-				{
-					*searchRoot = (struct movieNode*)malloc(sizeof(struct movieNode));
-					(*searchRoot)->title = malloc(strlen (leaf->title) + 1);
-					strcpy((*searchRoot)->title, leaf->title);
-					
-					(*searchRoot)->genre = malloc(strlen (leaf->genre) + 1);
-					strcpy((*searchRoot)->genre, leaf->genre);
-					
-					(*searchRoot)->runningTime = malloc(strlen (leaf->runningTime) + 1);
-					strcpy((*searchRoot)->runningTime, leaf->runningTime);
-					
-					(*searchRoot)->yearReleased = malloc(strlen (leaf->yearReleased) + 1);
-					strcpy((*searchRoot)->yearReleased, leaf->yearReleased);
-					
-					(*searchRoot)->left = (*searchRoot)->right = NULL;
-				}
-				else
-					insert(leaf->title, leaf->genre, leaf->runningTime, leaf->yearReleased, &(*searchRoot), (Compare)cmpStr);
-			} */
-			
 			search(key, leaf->left, cmp, &(*searchRoot));
-			//search(key, leaf->right, cmp, &(*searchRoot));
 		}
 		else if(res > 0)
 		{
-			/* k = strstr(leaf->title, key);
-			if(k != NULL)
-			{
-				if (*searchRoot == NULL){
-					*searchRoot = (struct movieNode*)malloc(sizeof(struct movieNode));
-					(*searchRoot)->title = malloc(strlen (leaf->title) + 1);
-					strcpy((*searchRoot)->title, leaf->title);
-					
-					(*searchRoot)->genre = malloc(strlen (leaf->genre) + 1);
-					strcpy((*searchRoot)->genre, leaf->genre);
-					
-					(*searchRoot)->runningTime = malloc(strlen (leaf->runningTime) + 1);
-					strcpy((*searchRoot)->runningTime, leaf->runningTime);
-					
-					(*searchRoot)->yearReleased = malloc(strlen (leaf->yearReleased) + 1);
-					strcpy((*searchRoot)->yearReleased, leaf->yearReleased);
-					
-					(*searchRoot)->left = (*searchRoot)->right = NULL;
-				}
-				else
-					insert(leaf->title, leaf->genre, leaf->runningTime, leaf->yearReleased, &(*searchRoot), (Compare)cmpStr);
-			} */
-			
-			//search(key, leaf->left, cmp, &(*searchRoot));
 			search(key, leaf->right, cmp, &(*searchRoot));
 		}
 		else
 		{
-			//search(key, leaf->right, cmp, &(*searchRoot));
 			insert(leaf->title, leaf->genre, leaf->runningTime, leaf->yearReleased, &(*searchRoot), (Compare)cmpStr);
 		}
 	}
@@ -370,6 +263,7 @@ void search(char* key, struct movieNode* leaf, Compare cmp, struct movieNode ** 
 }
 
 //Traverse to the farthest left node to find the minimum value.
+//Code borrowed from https://www.geeksforgeeks.org/binary-search-tree-set-2-delete/
 struct userMovieNode * minValueNode(struct userMovieNode* node)
 {
 	struct userMovieNode* current = node;
@@ -382,6 +276,7 @@ struct userMovieNode * minValueNode(struct userMovieNode* node)
 }
 
 //Deletes a user movie node with the specified title.
+//Code borrowed from https://www.geeksforgeeks.org/binary-search-tree-set-2-delete/
 struct userMovieNode* delete_userNode(struct userMovieNode* root, char* key, char * year, char * mediaType, Compare cmp)
 {
 	if(root == NULL)
@@ -506,6 +401,8 @@ int main()
 		getbegyx(stdscr, yBeg, xBeg);
 		getmaxyx(stdscr, yMax, xMax);
 		
+		
+		
 		bool fileNameExitCond = false;
 		
 		//get filename from user to begin
@@ -520,7 +417,6 @@ int main()
 		noecho();
 		
 		struct userMovieNode ** userRoot = NULL;
-		bool keepNULL = false;
 		
 		//If the username is bad input, inform the user and forcequit the program.
 		if(userFilename == NULL || strcmp(userFilename, "\n") == 0 || strcmp(userFilename, "") == 0 )
@@ -1423,7 +1319,6 @@ int main()
 				zeroIndex();
 			}
 		}
-		
 		
 		endwin();
 		
