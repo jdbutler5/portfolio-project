@@ -413,7 +413,8 @@ int main()
 		//If the username is bad input, inform the user and forcequit the program.
 		if(userFilename == NULL || strcmp(userFilename, "\n") == 0 || strcmp(userFilename, "") == 0 )
 		{
-			mvprintw(yMax/2 + 1, (xMax/4), "Error: You must type something in for your username. [Press Enter to continue. Program will exit.]");
+			mvprintw(yMax/2 + 1, (xMax/4), "Error: You must type something in for your username.");
+			mvprintw(yMax/2 + 2, (xMax/4), "[Press Enter to continue. Program will exit.]");
 			getch();
 			endwin();
 			exit(1);
@@ -554,7 +555,6 @@ int main()
 					if(stringToAdd[0] != '\0' && stringToAdd[0] != '\t' && stringToAdd[0] != '\n' && stringToAdd[0] != '\r')
 					{
 						sprintf(stringToAdd, "%s\t%s\t%s\t%s\t%s\t%s\n", userArray[i]->title, userArray[i]->runningTime, userArray[i]->yearReleased, userArray[i]->genre, userArray[i]->type, userArray[i]->date);
-						//mvprintw(yBeg+i, 0, "%s", stringToAdd);
 						mvprintw(yMax-1, 0, "Wrote %s's catalog to file. [Press Enter to Exit...]", userFilename);
 						if(file2Null)
 							fputs(stringToAdd, file3);
@@ -683,7 +683,6 @@ int main()
 						wrefresh(searchwin);
 						
 						int choice2;
-						//bool exitSearch = false;
 						int printStart = 0;
 						
 						//This while loop allows for the user to scroll through the search results.
@@ -774,7 +773,6 @@ int main()
 						time_t t = time(NULL);
 						struct tm *tm = localtime(&t);
 						char date[64];
-						//strftime(date, sizeof(date), "%c", tm);
 						strftime(date, sizeof(date), "%m/%d/%Y", tm);
 						
 						wclear(searchwin);
@@ -986,7 +984,7 @@ int main()
 					}
 					
 					char * typeChoices[] = {"DVD", "BluRay", "Digital"};
-					char * updateChoices[] = {"Update Type", "Update Time"};
+					char * updateChoices[] = {"Update Type", "Update Date"};
 					char * mediaType = (char *)malloc(10 * sizeof(char));
 					time_t t = time(NULL);
 					struct tm *tm = localtime(&t);
@@ -1108,7 +1106,7 @@ int main()
 						mvprintw(yMax-1, xBeg, "Added %s (%s) to %s's catalog", updatedNode->title, updatedNode->type, userFilename);
 						getch();
 					}
-					else if(updateChoices[updateHighlight] == "Update Time")
+					else if(updateChoices[updateHighlight] == "Update Date")
 					{
 						wclear(printwin);
 						wrefresh(printwin);

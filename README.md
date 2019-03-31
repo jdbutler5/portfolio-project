@@ -36,7 +36,7 @@ The user can scroll through the results with the up and down arrow keys.
 
 The program will let the user know how many results their search returned.
 If the user inputs a string with no results or an invalid string (i.e. they just hit Enter without typing anything), they will be informed that their search returned no results
-and sent back to the main menu.
+and sent back to the main menu. Search strings MUST be entered with proper capitalization and punctuation.
 
 After typing in a search string and pressing Enter on a movie record, the user is prompted to decide what type of media to add to their catalog, from DVD, BluRay, or Digital.
 After the user makes this selection, the program will add it to their catalog and notify the user that it was a success. 
@@ -74,7 +74,9 @@ allowed me to implement a log(n) search time through the binary search tree.
 I used delete_userNode and minValueNode for deleting user movie nodes, which was used in both the update and delete functions.
 
 https://www.geeksforgeeks.org/binary-search-tree-set-1-search-and-insertion/ 
+
 https://www.geeksforgeeks.org/binary-search-tree-set-2-delete/
+
 https://www.geeksforgeeks.org/write-a-c-program-to-calculate-size-of-a-tree/
 
 ## Info
