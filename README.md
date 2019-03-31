@@ -58,6 +58,7 @@ Selecting "Delete" from the main menu allows the user to access their catalog th
 by the user will be deleted from their catalog. The program will notify the user of the deletion and then send them back to the main menu.
 
 Selecting "Exit" from the main menu will write the user's catalog to the .log file denoted with their username and then exit the program.
+The user will be informed that this write has occured.
 
 ## Built With
 - Ubuntu for Windows
