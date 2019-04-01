@@ -435,13 +435,13 @@ int main()
 						userInsert(tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate, &userRoot, (Compare)cmpStr);
 				}
 				
-				free(file_content2);
-				free(tTitle);
-				free(tRunningTime);
-				free(tYearReleased);
-				free(tGenre);
-				free(tType);
-				free(tDate);
+				//free(file_content2);
+				//free(tTitle);
+				//free(tRunningTime);
+				//free(tYearReleased);
+				// free(tGenre);
+				// free(tType);
+				// free(tDate);
 				
 				mvprintw(yMax-1, 0, "Loading %s's catalog. [Press Enter to continue.]", userFilename);
 				getch();
@@ -548,13 +548,13 @@ int main()
 					if(stringToAdd[0] != '\0' && stringToAdd[0] != '\t' && stringToAdd[0] != '\n' && stringToAdd[0] != '\r')
 					{
 						sprintf(stringToAdd, "%s\t%s\t%s\t%s\t%s\t%s\n", userArray[i]->title, userArray[i]->runningTime, userArray[i]->yearReleased, userArray[i]->genre, userArray[i]->type, userArray[i]->date);
-						mvprintw(yMax-1, 0, "Wrote %s's catalog to file. [Press Enter to Exit...]", userFilename);
-						if(file2Null)
+						if(file2Null || file2 == NULL)
 							fputs(stringToAdd, file3);
 						else
 							fputs(stringToAdd, file2);
 					}
 				} 
+				mvprintw(yMax-1, 0, "Wrote %s's catalog to file. [Press Enter to Exit...]", userFilename);
 				getch();
 				free(stringToAdd);
 				for(int i = 0; i < userArraySize; i++)
