@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <ctype.h>
 #include <ncurses.h>
 
 //global indexing integer
@@ -27,8 +28,8 @@ struct userMovieNode
 	char * yearReleased;
 	char * type;
 	char * date;
-	struct movieNode *left;
-	struct movieNode *right;
+	struct userMovieNode *left;
+	struct userMovieNode *right;
 };
 
 //Comparison typedef.
@@ -241,8 +242,6 @@ void zeroIndex()
 void search(char* key, struct movieNode* leaf, Compare cmp, struct movieNode ** searchRoot)
 {
 	int res;
-	char * p;
-	char * k;
 	
 	if(leaf != NULL)
 	{
@@ -267,7 +266,7 @@ void search(char* key, struct movieNode* leaf, Compare cmp, struct movieNode ** 
 		}
 	}
 	
-	return (*searchRoot);
+	//return (*searchRoot);
 }
 
 //Traverse to the farthest left node to find the minimum value.
@@ -292,10 +291,8 @@ struct userMovieNode* delete_userNode(struct userMovieNode* root, char* key, cha
 	
 	int res;
 	int yearRes;
-	int typeRes;
 	res = cmp(key, root->title);
 	yearRes = cmp(year, root->yearReleased);
-	typeRes = cmp(mediaType, root->type);
 	if(res < 0 && root->left != NULL)
 		root->left = delete_userNode(root->left, key, year, mediaType, cmp);
 	else if(res > 0 && root->right != NULL)
@@ -324,18 +321,6 @@ struct userMovieNode* delete_userNode(struct userMovieNode* root, char* key, cha
 			}
 		
 			struct userMovieNode *temp = minValueNode(root->right);
-			root->title = malloc(temp->title + 1);
-			root->title = temp->title;
-			root->genre = malloc(temp->genre + 1);
-			root->genre = temp->genre;
-			root->runningTime = malloc(temp->runningTime + 1);
-			root->runningTime = temp->runningTime;
-			root->yearReleased = malloc(temp->yearReleased + 1);
-			root->yearReleased = temp->yearReleased;
-			root->type = malloc(temp->type + 1);
-			root->type = temp->type;
-			root->date = malloc(temp->date + 1);
-			root->date = temp->date;
 			
 			root->right = delete_userNode(root->right, temp->title, temp->yearReleased, temp->type, (Compare)cmpStr);
 		}
@@ -362,15 +347,15 @@ int main()
         rewind(file);
 		
 		//variable definitions
-		char ** tConst = malloc(fsize*10*sizeof(char));
-		char ** titleType = malloc(fsize*10*sizeof(char));
-		char ** primaryTitle = malloc(fsize*200*sizeof(char));
-		char ** originalTitle = malloc(fsize*200*sizeof(char));
-		char ** isAdult = malloc(fsize*sizeof(char));
-		char ** startYear = malloc(fsize*5*sizeof(char));
-		char ** endYear = malloc(fsize*5*sizeof(char));
-		char ** runtimeMinutes = malloc(fsize*100*sizeof(char));
-		char ** genres = malloc(fsize*100*sizeof(char));
+		char * tConst = malloc(fsize*10*sizeof(char));
+		char * titleType = malloc(fsize*10*sizeof(char));
+		char * primaryTitle = malloc(fsize*200*sizeof(char));
+		char * originalTitle = malloc(fsize*200*sizeof(char));
+		char * isAdult = malloc(fsize*sizeof(char));
+		char * startYear = malloc(fsize*5*sizeof(char));
+		char * endYear = malloc(fsize*5*sizeof(char));
+		char * runtimeMinutes = malloc(fsize*100*sizeof(char));
+		char * genres = malloc(fsize*100*sizeof(char));
 
         // insert all records in movie_records into 
         char * file_content = (char*)malloc(fsize);
@@ -408,7 +393,7 @@ int main()
 		
 		noecho();
 		
-		struct userMovieNode ** userRoot = NULL;
+		struct userMovieNode * userRoot = NULL;
 		
 		//If the username is bad input, inform the user and forcequit the program.
 		if(userFilename == NULL || strcmp(userFilename, "\n") == 0 || strcmp(userFilename, "") == 0 )
@@ -443,13 +428,21 @@ int main()
 				char * tDate = malloc(64 * sizeof(char));
 				
 				userRoot = NULL;
-				int i = 0;
 				while(fgets(file_content2,fsize2,file2))
 				{
 					sscanf(file_content2, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]", tTitle, tRunningTime, tYearReleased, tGenre, tType, tDate);
 					if(file_content2[0] != '\0' && file_content2[0] != '\t' && file_content2[0] != '\n' && file_content2[0] != '\r')
 						userInsert(tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate, &userRoot, (Compare)cmpStr);
 				}
+				
+				free(file_content2);
+				free(tTitle);
+				free(tRunningTime);
+				free(tYearReleased);
+				free(tGenre);
+				free(tType);
+				free(tDate);
+				
 				mvprintw(yMax-1, 0, "Loading %s's catalog. [Press Enter to continue.]", userFilename);
 				getch();
 			}
@@ -516,7 +509,7 @@ int main()
 					break;
 			}
 			
-			if(choices[highlight] == "Exit")
+			if(strcmp(choices[highlight], "Exit") == 0)
 			{
 				//When the user exits, send the user catalog BST to a new array and save that array to the user file
 				FILE * file3;
@@ -563,6 +556,11 @@ int main()
 					}
 				} 
 				getch();
+				free(stringToAdd);
+				for(int i = 0; i < userArraySize; i++)
+				{
+					free(userArray[i]);
+				}
 				if(file2 != NULL)
 					fclose(file2);
 				if(file3 != NULL)
@@ -570,7 +568,7 @@ int main()
 				endwin();
 				exit(1);
 			}
-			else if(choices[highlight] == "Add - Add a movie to your catalog")
+			else if(strcmp(choices[highlight], "Add - Add a movie to your catalog") == 0)
 			{
 				wborder(menuwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
 				wclear(menuwin);
@@ -617,7 +615,7 @@ int main()
 				else 
 				{
 					noecho();
-					struct movieNode** searchRoot = NULL;
+					struct movieNode* searchRoot = NULL;
 					char searchKey[strlen(searchChoice)];
 					
 					search(searchChoice, root, (Compare)cmpStr, &searchRoot);
@@ -819,15 +817,15 @@ int main()
 							wrefresh(searchwin);
 						}
 						
-						if(typeChoices[typeHighlight] == "DVD")
+						if(strcmp(typeChoices[typeHighlight], "DVD") == 0)
 						{
 							mediaType = "DVD";
 						}
-						else if(typeChoices[typeHighlight] == "BluRay")
+						else if(strcmp(typeChoices[typeHighlight], "BluRay") == 0)
 						{
 							mediaType = "BluRay";
 						}
-						else if(typeChoices[typeHighlight] == "Digital")
+						else if(strcmp(typeChoices[typeHighlight], "Digital") == 0)
 						{
 							mediaType = "Digital";
 						}
@@ -849,7 +847,7 @@ int main()
 				}
 				zeroIndex();
 			}	
-			else if(choices[highlight] == "View/Update Catalog - Update current catalog")
+			else if(strcmp(choices[highlight], "View/Update Catalog - Update current catalog") == 0)
 			{
 				wborder(menuwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
 				wclear(menuwin);
@@ -1033,7 +1031,7 @@ int main()
 					}
 					
 					int updateChoiceHighlight = 0;
-					if(updateChoices[updateHighlight] == "Update Type")
+					if(strcmp(updateChoices[updateHighlight], "Update Type") == 0)
 					{
 						wclear(printwin);
 						wrefresh(printwin);
@@ -1073,31 +1071,31 @@ int main()
 							wrefresh(printwin);
 						}
 						
-						if(typeChoices[updateChoiceHighlight] == "DVD")
+						if(strcmp(typeChoices[updateChoiceHighlight], "DVD") == 0)
 						{
 							mediaType = "DVD";
 						}
-						else if(typeChoices[updateChoiceHighlight] == "BluRay")
+						else if(strcmp(typeChoices[updateChoiceHighlight], "BluRay") == 0)
 						{
 							mediaType = "BluRay";
 						}
-						else if(typeChoices[updateChoiceHighlight] == "Digital")
+						else if(strcmp(typeChoices[updateChoiceHighlight], "Digital") == 0)
 						{
 							mediaType = "Digital";
 						}
 						
-						struct userMovieNode * updatedNode = malloc((struct userMovieNode*)sizeof(struct userMovieNode));
-						updatedNode->title = malloc(array[printHighlight]->title + 1);
+						struct userMovieNode * updatedNode = malloc(sizeof(struct userMovieNode));
+						updatedNode->title = malloc(strlen(array[printHighlight]->title) + 1);
 						updatedNode->title = array[printHighlight]->title;
-						updatedNode->genre = malloc(array[printHighlight]->genre + 1);
+						updatedNode->genre = malloc(strlen(array[printHighlight]->genre) + 1);
 						updatedNode->genre = array[printHighlight]->genre;
-						updatedNode->runningTime = malloc(array[printHighlight]->runningTime + 1);
+						updatedNode->runningTime = malloc(strlen(array[printHighlight]->runningTime) + 1);
 						updatedNode->runningTime = array[printHighlight]->runningTime;
-						updatedNode->yearReleased = malloc(array[printHighlight]->yearReleased + 1);
+						updatedNode->yearReleased = malloc(strlen(array[printHighlight]->yearReleased) + 1);
 						updatedNode->yearReleased = array[printHighlight]->yearReleased;
-						updatedNode->type = malloc(mediaType + 1);
+						updatedNode->type = malloc(strlen(mediaType) + 1);
 						updatedNode->type = mediaType;
-						updatedNode->date = malloc(array[printHighlight]->date + 1);
+						updatedNode->date = malloc(strlen(array[printHighlight]->date) + 1);
 						updatedNode->date = array[printHighlight]->date; 
 						
 						userRoot = delete_userNode(userRoot, updatedNode->title, updatedNode->yearReleased, updatedNode->type, (Compare)cmpStr);
@@ -1106,7 +1104,7 @@ int main()
 						mvprintw(yMax-1, xBeg, "Added %s (%s) to %s's catalog", updatedNode->title, updatedNode->type, userFilename);
 						getch();
 					}
-					else if(updateChoices[updateHighlight] == "Update Date")
+					else if(strcmp(updateChoices[updateHighlight], "Update Date") == 0)
 					{
 						wclear(printwin);
 						wrefresh(printwin);
@@ -1138,18 +1136,18 @@ int main()
 						}
 						else
 						{
-							struct userMovieNode * updatedNode = malloc((struct userMovieNode*)sizeof(struct userMovieNode));
-							updatedNode->title = malloc(array[printHighlight]->title + 1);
+							struct userMovieNode * updatedNode = malloc(sizeof(struct userMovieNode));
+							updatedNode->title = malloc(strlen(array[printHighlight]->title) + 1);
 							updatedNode->title = array[printHighlight]->title;
-							updatedNode->genre = malloc(array[printHighlight]->genre + 1);
+							updatedNode->genre = malloc(strlen(array[printHighlight]->genre) + 1);
 							updatedNode->genre = array[printHighlight]->genre;
-							updatedNode->runningTime = malloc(array[printHighlight]->runningTime + 1);
+							updatedNode->runningTime = malloc(strlen(array[printHighlight]->runningTime) + 1);
 							updatedNode->runningTime = array[printHighlight]->runningTime;
-							updatedNode->yearReleased = malloc(array[printHighlight]->yearReleased + 1);
+							updatedNode->yearReleased = malloc(strlen(array[printHighlight]->yearReleased) + 1);
 							updatedNode->yearReleased = array[printHighlight]->yearReleased;
-							updatedNode->type = malloc(array[printHighlight]->type + 1);
+							updatedNode->type = malloc(strlen(array[printHighlight]->type) + 1);
 							updatedNode->type = array[printHighlight]->type;
-							updatedNode->date = malloc(dateStr + 1);
+							updatedNode->date = malloc(strlen(dateStr) + 1);
 							updatedNode->date = dateStr; 
 							
 							userRoot = delete_userNode(userRoot, updatedNode->title, updatedNode->yearReleased, updatedNode->type, (Compare)cmpStr);
@@ -1170,7 +1168,7 @@ int main()
 				
 				zeroIndex();
 			}	
-			else if(choices[highlight] == "Delete - Delete a movie from your catalog")
+			else if(strcmp(choices[highlight], "Delete - Delete a movie from your catalog") == 0)
 			{
 				wborder(menuwin, ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
 				wclear(menuwin);
@@ -1337,7 +1335,6 @@ int main()
     }
 	
     fclose(file);
-	fclose(file2);
 
     return 0;
 }
