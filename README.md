@@ -26,6 +26,9 @@ To run the program, compile using make in the bash terminal and run the executab
 
 The user will be prompted for a username. Entering in a username will open a .log file if it exists, 
 and if the username specified does not already have a .log file, one will be created. 
+
+Usernames are limited to 30 characters.
+
 (The open file and its changes are not saved until the program is closed, to ensure that the program writes to the file correctly. The user's catalog
 will, however, be stored in memory until the program exits, at which point the catalog is written to the file.)
 

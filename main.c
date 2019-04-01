@@ -435,14 +435,6 @@ int main()
 						userInsert(tTitle, tGenre, tRunningTime, tYearReleased, tType, tDate, &userRoot, (Compare)cmpStr);
 				}
 				
-				//free(file_content2);
-				//free(tTitle);
-				//free(tRunningTime);
-				//free(tYearReleased);
-				// free(tGenre);
-				// free(tType);
-				// free(tDate);
-				
 				mvprintw(yMax-1, 0, "Loading %s's catalog. [Press Enter to continue.]", userFilename);
 				getch();
 			}
